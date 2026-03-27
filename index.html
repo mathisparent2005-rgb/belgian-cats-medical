@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Belgian Cats — Medische Opvolging</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --cats-navy: #0B1F3A;
+    --cats-gold: #C8922A;
+    --cats-gold-light: #F0C96E;
+    --cats-cream: #F8F5EF;
+    --cats-white: #FFFFFF;
+    --fit: #2D7A3A;
+    --fit-bg: #E8F5EB;
+    --fit-complaints: #5B8A2F;
+    --fit-complaints-bg: #EEF5E0;
+    --restricted: #C76A00;
+    --restricted-bg: #FFF0DC;
+    --injured: #B42C2C;
+    --injured-bg: #FDEAEA;
+    --border: #E2DDD5;
+    --text: #1A1612;
+    --text-muted: #6B6560;
+    --surface: #FFFFFF;
+    --bg: #F4F1EB;
+    --sidebar-w: 220px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--cats-navy);
+    min-height: 100vh;
+    position: fixed;
+    top: 0; left: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .logo-cat {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cats-gold);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .logo-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.2;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 2px;
+  }
+
+  nav {
+    padding: 16px 0;
+    flex: 1;
+  }
+
+  .nav-section {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    padding: 12px 20px 6px;
+    font-weight: 500;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 13.5px;
+    font-weight: 400;
+    border-left: 3px solid transparent;
+    text-decoration: none;
+  }
+
+  .nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+  .nav-item.active { color: var(--cats-gold-light); border-left-color: var(--cats-gold); background: rgba(200,146,42,0.08); }
+
+  .nav-icon { width: 16px; font-size: 15px; text-align: center; flex-shrink: 0; }
+
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+  }
+
+  /* MAIN */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .topbar-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .topbar-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .content { padding: 28px; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+
+  /* GRID */
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+
+  .stat-label { font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .stat-value { font-size: 32px; font-weight: 600; line-height: 1; }
+  .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .stat-fit .stat-value { color: var(--fit); }
+  .stat-inj .stat-value { color: var(--injured); }
+  .stat-rest .stat-value { color: var(--restricted); }
+  .stat-total .stat-value { color: var(--cats-navy); }
+
+  /* STATUS BADGES */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .badge-fit { background: var(--fit-bg); color: var(--fit); }
+  .badge-fit::before { background: var(--fit); }
+  .badge-fit-complaints { background: var(--fit-complaints-bg); color: var(--fit-complaints); }
+  .badge-fit-complaints::before { background: var(--fit-complaints); }
+  .badge-restricted { background: var(--restricted-bg); color: var(--restricted); }
+  .badge-restricted::before { background: var(--restricted); }
+  .badge-injured { background: var(--injured-bg); color: var(--injured); }
+  .badge-injured::before { background: var(--injured); }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+
+  .player-name { font-weight: 500; }
+  .player-pos { font-size: 11px; color: var(--text-muted); }
+
+  /* FILTER BAR */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-btn {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    color: var(--text);
+    transition: all 0.15s;
+    font-weight: 400;
+  }
+  .filter-btn:hover { border-color: var(--cats-navy); }
+  .filter-btn.active { background: var(--cats-navy); color: #fff; border-color: var(--cats-navy); }
+
+  .search-input {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    background: var(--surface);
+    color: var(--text);
+    margin-left: auto;
+    width: 180px;
+  }
+  .search-input:focus { border-color: var(--cats-navy); }
+
+  /* FORMS */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+  input, select, textarea {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--cats-navy); }
+  textarea { resize: vertical; min-height: 80px; }
+
+  .btn {
+    padding: 9px 20px;
+    border-radius: 7px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-primary { background: var(--cats-navy); color: #fff; }
+  .btn-primary:hover { background: #162e54; }
+  .btn-gold { background: var(--cats-gold); color: #fff; }
+  .btn-gold:hover { background: #a9781e; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--cats-navy); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-danger { background: var(--injured-bg); color: var(--injured); border: 1px solid #f5b5b5; }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+  /* PLAYER DETAIL */
+  .player-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .player-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--cats-navy);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--cats-gold-light);
+    flex-shrink: 0;
+  }
+
+  .player-info h2 { font-size: 20px; font-weight: 600; }
+  .player-info p { font-size: 13px; color: var(--text-muted); }
+
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 20px; }
+  .timeline::before { content: ''; position: absolute; left: 6px; top: 8px; bottom: 0; width: 1px; background: var(--border); }
+  .timeline-item { position: relative; margin-bottom: 18px; }
+  .timeline-item::before { content: ''; position: absolute; left: -16px; top: 6px; width: 8px; height: 8px; border-radius: 50%; background: var(--border); border: 2px solid var(--surface); }
+  .timeline-date { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text-muted); margin-bottom: 3px; }
+  .timeline-content { font-size: 13.5px; }
+  .timeline-item.fit::before { background: var(--fit); }
+  .timeline-item.injured::before { background: var(--injured); }
+  .timeline-item.restricted::before { background: var(--restricted); }
+
+  /* WEEKRAPPORT */
+  .week-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .week-nav-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 28px;
+    width: 90%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-close { cursor: pointer; color: var(--text-muted); font-size: 20px; line-height: 1; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--cats-navy);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* STATUS GRID (dagstatus) */
+  .status-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .status-cell {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--surface);
+  }
+  .status-cell:hover { border-color: var(--cats-navy); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .status-cell-name { font-size: 12px; font-weight: 500; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status-cell-status { font-size: 11px; }
+
+  .status-cell.fit { border-left: 3px solid var(--fit); }
+  .status-cell.fit-complaints { border-left: 3px solid var(--fit-complaints); }
+  .status-cell.restricted { border-left: 3px solid var(--restricted); }
+  .status-cell.injured { border-left: 3px solid var(--injured); }
+
+  /* CHART CONTAINER */
+  .chart-container { position: relative; height: 220px; }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .section-title { font-size: 16px; font-weight: 600; }
+
+  /* INJURY DETAIL TABLE */
+  .inj-type-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .inj-type-bar { height: 6px; border-radius: 3px; background: var(--injured); }
+  .inj-type-label { font-size: 13px; min-width: 120px; }
+  .inj-type-count { font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-left: auto; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .sidebar { width: 60px; }
+    .sidebar-logo, .nav-section, .nav-item span, .logo-title, .logo-sub, .logo-cat, .sidebar-footer { display: none; }
+    .nav-icon { width: 100%; text-align: center; }
+    .nav-item { padding: 12px; justify-content: center; border-left: none; border-bottom: 3px solid transparent; }
+    .nav-item.active { border-bottom-color: var(--cats-gold); background: rgba(200,146,42,0.08); }
+    .main { margin-left: 60px; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .status-grid { grid-template-columns: repeat(3, 1fr); }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 600px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .status-grid { grid-template-columns: repeat(2, 1fr); }
+    .content { padding: 16px; }
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  .info-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--text-muted); }
+  .info-value { font-weight: 500; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+  .empty-state-icon { font-size: 36px; margin-bottom: 10px; }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    margin-bottom: 16px;
+  }
+  .back-btn:hover { color: var(--cats-navy); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-cat">Belgian Cats</div>
+    <div class="logo-title">Medische<br>Opvolging</div>
+    <div class="logo-sub">Medische Staf Portaal</div>
+  </div>
+  <nav>
+    <div class="nav-section">Overzicht</div>
+    <div class="nav-item active" onclick="showPage('home')">
+      <span class="nav-icon">⊞</span><span>Dashboard</span>
+    </div>
+    <div class="nav-section">Spelers</div>
+    <div class="nav-item" onclick="showPage('spelers')">
+      <span class="nav-icon">◉</span><span>Spelerslijst</span>
+    </div>
+    <div class="nav-item" onclick="showPage('dagstatus')">
+      <span class="nav-icon">◑</span><span>Dagstatus</span>
+    </div>
+    <div class="nav-section">Rapporten</div>
+    <div class="nav-item" onclick="showPage('weekrapport')">
+      <span class="nav-icon">◈</span><span>Weekrapport</span>
+    </div>
+    <div class="nav-item" onclick="showPage('medisch')">
+      <span class="nav-icon">✚</span><span>Medisch rapport</span>
+    </div>
+    <div class="nav-section">Invoer</div>
+    <div class="nav-item" onclick="showPage('forms')">
+      <span class="nav-icon">✎</span><span>Formulieren</span>
+    </div>
+    <div class="nav-item" onclick="showPage('mail')">
+      <span class="nav-icon">✉</span><span>Mail rapport</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">v1.0 · 2025</div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    <div class="topbar-date" id="topbarDate"></div>
+  </div>
+
+  <div class="content">
+
+    <!-- ===== HOME / DASHBOARD ===== -->
+    <div class="page active" id="page-home">
+      <div class="grid-4">
+        <div class="stat-card stat-total">
+          <div class="stat-label">Totaal spelers</div>
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-sub">Selectie</div>
+        </div>
+        <div class="stat-card stat-fit">
+          <div class="stat-label">Fit</div>
+          <div class="stat-value" id="stat-fit">0</div>
+          <div class="stat-sub">Beschikbaar</div>
+        </div>
+        <div class="stat-card stat-rest">
+          <div class="stat-label">Restricties</div>
+          <div class="stat-value" id="stat-restricted">0</div>
+          <div class="stat-sub">Beperkt beschikbaar</div>
+        </div>
+        <div class="stat-card stat-inj">
+          <div class="stat-label">Geblesseerd</div>
+          <div class="stat-value" id="stat-injured">0</div>
+          <div class="stat-sub">Niet beschikbaar</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Teamstatus verdeling</div>
+          <div class="chart-container">
+            <canvas id="statusChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Blessures per lichaamsdeel</div>
+          <div class="chart-container">
+            <canvas id="bodypartChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">Recentste updates</div>
+          <button class="btn btn-outline btn-sm" onclick="showPage('dagstatus')">Alle updates →</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Speler</th>
+              <th>Status</th>
+              <th>Notitie</th>
+              <th>Datum</th>
+              <th>Door</th>
+            </tr>
+          </thead>
+          <tbody id="recentUpdatesTable">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">Beschikbaarheid overzicht</div>
+        </div>
+        <div id="availabilityBar" style="height: 24px; border-radius: 6px; overflow: hidden; display: flex; margin-bottom: 10px;"></div>
+        <div style="display: flex; gap: 20px; font-size: 12px; color: var(--text-muted);">
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--fit);display:inline-block;"></span>Fit</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--fit-complaints);display:inline-block;"></span>Fit met klachten</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--restricted);display:inline-block;"></span>Restricties</span>
+          <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:var(--injured);display:inline-block;"></span>Geblesseerd</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SPELERS ===== -->
+    <div class="page" id="page-spelers">
+      <div id="spelersListView">
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="filterSpelers('all', this)">Alle</button>
+          <button class="filter-btn" onclick="filterSpelers('fit', this)">Fit</button>
+          <button class="filter-btn" onclick="filterSpelers('fit-complaints', this)">Fit m. klachten</button>
+          <button class="filter-btn" onclick="filterSpelers('restricted', this)">Restricties</button>
+          <button class="filter-btn" onclick="filterSpelers('injured', this)">Geblesseerd</button>
+          <input type="text" class="search-input" placeholder="Zoek speler..." oninput="searchSpelers(this.value)">
+        </div>
+
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Speler</th>
+                <th>Positie</th>
+                <th>Club</th>
+                <th>Status</th>
+                <th>Laatste update</th>
+                <th>Actie</th>
+              </tr>
+            </thead>
+            <tbody id="spelersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SPELER DETAIL -->
+      <div id="spelersDetailView" style="display:none;">
+        <div class="back-btn" onclick="closePlayerDetail()">← Terug naar lijst</div>
+        <div id="playerDetailContent"></div>
+      </div>
+    </div>
+
+    <!-- ===== DAGSTATUS ===== -->
+    <div class="page" id="page-dagstatus">
+      <div class="section-header">
+        <div class="section-title">Dagstatus — <span id="dagstatusDate"></span></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="openUpdateModal()">+ Status updaten</button>
+          <button class="btn btn-primary btn-sm" onclick="exportDagstatus()">Exporteer dag</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterDag('all', this)">Alle</button>
+        <button class="filter-btn" onclick="filterDag('fit', this)">Fit</button>
+        <button class="filter-btn" onclick="filterDag('fit-complaints', this)">Fit m. klachten</button>
+        <button class="filter-btn" onclick="filterDag('restricted', this)">Restricties</button>
+        <button class="filter-btn" onclick="filterDag('injured', this)">Geblesseerd</button>
+      </div>
+
+      <div class="status-grid" id="dagstatusGrid"></div>
+    </div>
+
+    <!-- ===== WEEKRAPPORT ===== -->
+    <div class="page" id="page-weekrapport">
+      <div class="week-header">
+        <div class="section-title">Weekrapport</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="week-nav-btn" onclick="weekNav(-1)">← Vorige week</button>
+          <span id="weekLabel" style="font-size:13px;font-family:'DM Mono',monospace;color:var(--text-muted);padding:0 8px;"></span>
+          <button class="week-nav-btn" onclick="weekNav(1)">Volgende week →</button>
+          <button class="btn btn-gold btn-sm" onclick="generateWeekPDF()">📄 PDF export</button>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="stat-card stat-fit">
+          <div class="stat-label">Gemiddeld fit</div>
+          <div class="stat-value" id="week-fit">—</div>
+          <div class="stat-sub">Spelers / dag</div>
+        </div>
+        <div class="stat-card stat-rest">
+          <div class="stat-label">Gem. restricties</div>
+          <div class="stat-value" id="week-rest">—</div>
+          <div class="stat-sub">Spelers / dag</div>
+        </div>
+        <div class="stat-card stat-inj">
+          <div class="stat-label">Gem. geblesseerd</div>
+          <div class="stat-value" id="week-inj">—</div>
+          <div class="stat-sub">Spelers / dag</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Weekoverzicht per speler</div>
+        <table>
+          <thead>
+            <tr id="weekTableHeader"></tr>
+          </thead>
+          <tbody id="weekTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Notities van de week</div>
+        <div id="weekNotes"></div>
+      </div>
+    </div>
+
+    <!-- ===== MEDISCH RAPPORT ===== -->
+    <div class="page" id="page-medisch">
+      <div class="section-header">
+        <div class="section-title">Medisch rapport</div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <select id="medischPlayerSelect" onchange="loadMedischRapport(this.value)" style="width:280px;padding:8px 12px;">
+          <option value="">— Selecteer speler —</option>
+        </select>
+      </div>
+      <div id="medischContent">
+        <div class="empty-state">
+          <div class="empty-state-icon">📋</div>
+          <div>Selecteer een speler om het medisch rapport te bekijken</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== FORMS ===== -->
+    <div class="page" id="page-forms">
+      <div class="section-header">
+        <div class="section-title">Invoerformulieren</div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="card" style="cursor:pointer;border:2px solid transparent;transition:border 0.15s;" onclick="openFormModal('arts')"
+          onmouseenter="this.style.borderColor='var(--cats-navy)'" onmouseleave="this.style.borderColor='transparent'">
+          <div style="font-size:28px;margin-bottom:10px;">🩺</div>
+          <div style="font-weight:600;margin-bottom:4px;">Arts</div>
+          <div style="font-size:12px;color:var(--text-muted);">Diagnose, medicatie en medische beslissingen</div>
+        </div>
+        <div class="card" style="cursor:pointer;border:2px solid transparent;transition:border 0.15s;" onclick="openFormModal('kine')"
+          onmouseenter="this.style.borderColor='var(--cats-navy)'" onmouseleave="this.style.borderColor='transparent'">
+          <div style="font-size:28px;margin-bottom:10px;">🏃</div>
+          <div style="font-weight:600;margin-bottom:4px;">Kinesist</div>
+          <div style="font-size:12px;color:var(--text-muted);">Behandeling, revalidatie en dagstatus</div>
+        </div>
+        <div class="card" style="cursor:pointer;border:2px solid transparent;transition:border 0.15s;" onclick="openFormModal('physical')"
+          onmouseenter="this.style.borderColor='var(--cats-navy)'" onmouseleave="this.style.borderColor='transparent'">
+          <div style="font-size:28px;margin-bottom:10px;">💪</div>
+          <div style="font-weight:600;margin-bottom:4px;">Physical trainer</div>
+          <div style="font-size:12px;color:var(--text-muted);">Belasting, load en training readiness</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Recente invoer</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Type</th>
+              <th>Speler</th>
+              <th>Ingevoerd door</th>
+              <th>Notitie</th>
+            </tr>
+          </thead>
+          <tbody id="formLogsTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== MAIL ===== -->
+    <div class="page" id="page-mail">
+      <div class="section-header">
+        <div class="section-title">Rapport mailen</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Mail configuratie</div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Aan</label>
+            <input type="email" id="mailTo" value="bondscoach@basketbel.be" placeholder="ontvangers@email.be">
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>CC</label>
+            <input type="email" id="mailCC" value="performance@basketbel.be" placeholder="cc@email.be">
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Onderwerp</label>
+            <input type="text" id="mailSubject" value="Belgian Cats — Medisch weekrapport">
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Bijlage</label>
+            <select id="mailAttachment">
+              <option value="weekrapport">Weekrapport (huidige week)</option>
+              <option value="dagrapport">Dagrapport (vandaag)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:12px;">
+            <label>Berichttekst</label>
+            <textarea id="mailBody" rows="6">Beste,
+
+Hierbij het medisch rapport van de Belgian Cats.
+
+In bijlage vindt u de actuele teamstatus, inclusief alle blessures en beschikbaarheid.
+
+Met vriendelijke groeten,
+Medische staf Belgian Cats</textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-gold" onclick="sendMailReport()">✉ Verzend rapport</button>
+            <button class="btn btn-outline" onclick="previewMail()">Voorbeeld bekijken</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Mail preview</div>
+          <div id="mailPreview" style="background:var(--bg);border-radius:8px;padding:20px;">
+            <div style="background:#0B1F3A;color:#fff;padding:16px 20px;border-radius:6px 6px 0 0;margin:-20px -20px 16px;">
+              <div style="font-size:11px;letter-spacing:1.5px;color:#C8922A;text-transform:uppercase;margin-bottom:4px;">Belgian Cats</div>
+              <div style="font-size:14px;font-weight:600;">Medische Opvolging</div>
+            </div>
+            <div id="mailPreviewContent" style="font-size:13px;line-height:1.7;color:var(--text);">
+              Vul het formulier in en klik op "Voorbeeld bekijken".
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- ===== MODAL: Status update ===== -->
+<div class="modal-overlay" id="updateModal">
+  <div class="modal">
+    <div class="modal-title">
+      Status updaten
+      <span class="modal-close" onclick="closeModal('updateModal')">×</span>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Speler</label>
+        <select id="updatePlayer"></select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="updateStatus">
+          <option value="fit">🟢 Fit</option>
+          <option value="fit-complaints">🟡 Fit met klachten</option>
+          <option value="restricted">🟠 Restricties</option>
+          <option value="injured">🔴 Geblesseerd</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Notitie</label>
+        <input type="text" id="updateNote" placeholder="Korte omschrijving...">
+      </div>
+      <div class="form-group">
+        <label>Datum</label>
+        <input type="date" id="updateDate">
+      </div>
+      <div class="form-group">
+        <label>Ingevoerd door</label>
+        <input type="text" id="updateBy" placeholder="Naam staf">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="submitStatusUpdate()">Opslaan</button>
+      <button class="btn btn-outline" onclick="closeModal('updateModal')">Annuleren</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Arts / Kine / Physical form ===== -->
+<div class="modal-overlay" id="staffFormModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="staffFormTitle">Formulier</span>
+      <span class="modal-close" onclick="closeModal('staffFormModal')">×</span>
+    </div>
+    <div id="staffFormContent"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const players = [
+  { id: 1, name: "Julie Allemand", pos: "PG", number: 7, club: "Indiana Fever", dob: "1997-06-14", height: "170", contact: "julie@example.be" },
+  { id: 2, name: "Emma Meesseman", pos: "F", number: 8, club: "Indiana Fever", dob: "1993-05-25", height: "192", contact: "emma@example.be" },
+  { id: 3, name: "Kim Mestdagh", pos: "G", number: 3, club: "Basket Waregem", dob: "1990-05-15", height: "178", contact: "kim@example.be" },
+  { id: 4, name: "Antonia Delaere", pos: "G/F", number: 12, club: "Valencia BC", dob: "1997-02-18", height: "179", contact: "antonia@example.be" },
+  { id: 5, name: "Billie Massey", pos: "C", number: 15, club: "Basket Waregem", dob: "1997-09-08", height: "195", contact: "billie@example.be" },
+  { id: 6, name: "Hind Ben Abdelkader", pos: "F", number: 9, club: "Namur Capitale", dob: "1998-04-22", height: "183", contact: "hind@example.be" },
+  { id: 7, name: "Laure Resimont", pos: "G", number: 4, club: "Liège Panthers", dob: "1999-11-30", height: "172", contact: "laure@example.be" },
+  { id: 8, name: "Elisa Ramette", pos: "G", number: 6, club: "BLMA", dob: "2000-03-12", height: "174", contact: "elisa@example.be" },
+  { id: 9, name: "Kyara Linskens", pos: "C", number: 14, club: "Spar Girona", dob: "1998-01-05", height: "196", contact: "kyara@example.be" },
+  { id: 10, name: "Sara Blonde", pos: "G", number: 11, club: "Loon Lions", dob: "1999-07-27", height: "168", contact: "sara@example.be" },
+  { id: 11, name: "Amber Holt", pos: "F/C", number: 13, club: "Castors Braine", dob: "2001-09-14", height: "185", contact: "amber@example.be" },
+  { id: 12, name: "Tine Voet", pos: "G", number: 5, club: "Namur Capitale", dob: "2000-06-18", height: "170", contact: "tine@example.be" },
+  { id: 13, name: "Nastja Claessens", pos: "F", number: 16, club: "BLMA", dob: "2001-12-02", height: "180", contact: "nastja@example.be" },
+  { id: 14, name: "Maud Douvry", pos: "G", number: 2, club: "Castors Braine", dob: "1998-08-20", height: "171", contact: "maud@example.be" },
+  { id: 15, name: "Heleen Nauwelaers", pos: "F", number: 17, club: "Loon Lions", dob: "2002-04-09", height: "184", contact: "heleen@example.be" },
+  { id: 16, name: "Laure Verhaegen", pos: "G", number: 10, club: "Liège Panthers", dob: "2001-01-15", height: "173", contact: "laure.v@example.be" },
+  { id: 17, name: "Jana Van Dyck", pos: "G/F", number: 18, club: "Leuven Bears", dob: "2003-03-22", height: "177", contact: "jana@example.be" },
+  { id: 18, name: "Elien Aerts", pos: "C", number: 19, club: "Kangoeroes Mechelen", dob: "2002-10-11", height: "192", contact: "elien@example.be" },
+  { id: 19, name: "Lana Ghekiere", pos: "F", number: 20, club: "Basket Waregem", dob: "2000-07-03", height: "181", contact: "lana@example.be" },
+  { id: 20, name: "Silke Dronseika", pos: "G", number: 21, club: "Leuven Bears", dob: "2001-05-28", height: "169", contact: "silke@example.be" },
+  { id: 21, name: "Lore Mestdagh", pos: "G", number: 22, club: "Spar Girona", dob: "1992-11-07", height: "174", contact: "lore@example.be" },
+  { id: 22, name: "Hailey Van Lith", pos: "G", number: 23, club: "Charlotte Hornets", dob: "2003-01-10", height: "175", contact: "hailey@example.be" },
+];
+
+let statusUpdates = [
+  { id: 1, playerId: 1, status: "fit", note: "Volledig fit", date: today(), by: "Dr. Peeters" },
+  { id: 2, playerId: 2, status: "injured", note: "Enkelblessure links — MRI gepland", date: today(), by: "Dr. Peeters" },
+  { id: 3, playerId: 3, status: "fit-complaints", note: "Lichte kniepijn na training", date: today(), by: "Kine Janssen" },
+  { id: 4, playerId: 4, status: "fit", note: "", date: today(), by: "Kine Janssen" },
+  { id: 5, playerId: 5, status: "restricted", note: "Rugklachten — geen sprongtraining", date: today(), by: "Physical De Wolf" },
+  { id: 6, playerId: 6, status: "fit", note: "", date: today(), by: "Dr. Peeters" },
+  { id: 7, playerId: 7, status: "injured", note: "Hamstring graad 2 rechts", date: today(), by: "Dr. Peeters" },
+  { id: 8, playerId: 8, status: "fit", note: "", date: today(), by: "Kine Janssen" },
+  { id: 9, playerId: 9, status: "fit-complaints", note: "Schouderpijn — controle morgen", date: today(), by: "Dr. Peeters" },
+  { id: 10, playerId: 10, status: "fit", note: "", date: today(), by: "Physical De Wolf" },
+  { id: 11, playerId: 11, status: "fit", note: "", date: today(), by: "Physical De Wolf" },
+  { id: 12, playerId: 12, status: "restricted", note: "Pols — geen contact oefeningen", date: today(), by: "Dr. Peeters" },
+  { id: 13, playerId: 13, status: "fit", note: "", date: today(), by: "Kine Janssen" },
+  { id: 14, playerId: 14, status: "fit", note: "", date: today(), by: "Kine Janssen" },
+  { id: 15, playerId: 15, status: "injured", note: "Stressfractuur voet — 4 weken rust", date: today(), by: "Dr. Peeters" },
+  { id: 16, playerId: 16, status: "fit", note: "", date: today(), by: "Physical De Wolf" },
+  { id: 17, playerId: 17, status: "fit", note: "", date: today(), by: "Physical De Wolf" },
+  { id: 18, playerId: 18, status: "fit-complaints", note: "Lichte vermoeidheid na lange reis", date: today(), by: "Kine Janssen" },
+  { id: 19, playerId: 19, status: "fit", note: "", date: today(), by: "Physical De Wolf" },
+  { id: 20, playerId: 20, status: "fit", note: "", date: today(), by: "Dr. Peeters" },
+  { id: 21, playerId: 21, status: "fit", note: "", date: today(), by: "Kine Janssen" },
+  { id: 22, playerId: 22, status: "fit", note: "", date: today(), by: "Physical De Wolf" },
+];
+
+let medicalHistory = [
+  { playerId: 2, date: "2025-02-10", type: "Diagnose", description: "Enkelblessure links, graad 1 verstuiking", by: "Dr. Peeters" },
+  { playerId: 2, date: "2025-03-01", type: "Behandeling", description: "Echografie — bindweefsel herstel 80%", by: "Kine Janssen" },
+  { playerId: 7, date: "2025-01-20", type: "Diagnose", description: "Hamstring strain graad 2 rechts", by: "Dr. Peeters" },
+  { playerId: 7, date: "2025-01-22", type: "MRI", description: "Bevestiging graad 2, geen avulsie", by: "Dr. Peeters" },
+  { playerId: 15, date: "2025-02-28", type: "Diagnose", description: "Stressfractuur 2e middenvoetsbeentje rechts", by: "Dr. Peeters" },
+  { playerId: 15, date: "2025-03-01", type: "Radiologie", description: "X-ray bevestigd — 4 weken immobilisatie", by: "Dr. Peeters" },
+];
+
+let formLogs = [
+  { date: today(), type: "Arts", playerId: 2, by: "Dr. Peeters", note: "Enkelblessure gediagnosticeerd, MRI aangevraagd" },
+  { date: today(), type: "Kine", playerId: 3, by: "Kine Janssen", note: "Dagstatus fit met klachten ingevoerd" },
+  { date: today(), type: "Physical", playerId: 5, by: "Physical De Wolf", note: "Trainingsload beperkt, rugklachten" },
+];
+
+let currentWeekOffset = 0;
+let activeFilter = { spelers: 'all', dag: 'all' };
+let statusChartInstance = null;
+let bodypartChartInstance = null;
+
+// ============================================================
+// HELPERS
+// ============================================================
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('nl-BE', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function getPlayerById(id) {
+  return players.find(p => p.id === id);
+}
+
+function getLatestStatus(playerId) {
+  const updates = statusUpdates.filter(u => u.playerId === playerId).sort((a, b) => b.date.localeCompare(a.date));
+  return updates[0] || { status: 'fit', note: '', date: today(), by: '—' };
+}
+
+function statusLabel(s) {
+  const labels = { fit: 'Fit', 'fit-complaints': 'Fit met klachten', restricted: 'Restricties', injured: 'Geblesseerd' };
+  return labels[s] || s;
+}
+
+function statusBadge(s) {
+  return `<span class="badge badge-${s}">${statusLabel(s)}</span>`;
+}
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const pageTitles = {
+  home: 'Dashboard',
+  spelers: 'Spelerslijst',
+  dagstatus: 'Dagstatus',
+  weekrapport: 'Weekrapport',
+  medisch: 'Medisch rapport',
+  forms: 'Formulieren',
+  mail: 'Rapport mailen',
+};
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelector(`[onclick="showPage('${name}')"]`).classList.add('active');
+  document.getElementById('topbarTitle').textContent = pageTitles[name];
+  if (name === 'home') renderHome();
+  if (name === 'spelers') renderSpelers();
+  if (name === 'dagstatus') renderDagstatus();
+  if (name === 'weekrapport') renderWeekrapport();
+  if (name === 'medisch') renderMedisch();
+  if (name === 'forms') renderForms();
+}
+
+// ============================================================
+// HOME
+// ============================================================
+function renderHome() {
+  const all = players.length;
+  const counts = { fit: 0, 'fit-complaints': 0, restricted: 0, injured: 0 };
+  players.forEach(p => {
+    const s = getLatestStatus(p.id).status;
+    counts[s] = (counts[s] || 0) + 1;
+  });
+
+  document.getElementById('stat-total').textContent = all;
+  document.getElementById('stat-fit').textContent = counts.fit + (counts['fit-complaints'] || 0);
+  document.getElementById('stat-restricted').textContent = counts.restricted || 0;
+  document.getElementById('stat-injured').textContent = counts.injured || 0;
+
+  // Availability bar
+  const bar = document.getElementById('availabilityBar');
+  bar.innerHTML = '';
+  const colors = { fit: 'var(--fit)', 'fit-complaints': 'var(--fit-complaints)', restricted: 'var(--restricted)', injured: 'var(--injured)' };
+  Object.entries(counts).forEach(([status, count]) => {
+    if (count > 0) {
+      const div = document.createElement('div');
+      div.style.cssText = `flex: ${count}; background: ${colors[status]}; transition: flex 0.3s;`;
+      div.title = `${statusLabel(status)}: ${count}`;
+      bar.appendChild(div);
+    }
+  });
+
+  // Charts
+  renderStatusChart(counts);
+  renderBodypartChart();
+
+  // Recent updates
+  const recent = [...statusUpdates].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
+  const tbody = document.getElementById('recentUpdatesTable');
+  tbody.innerHTML = recent.map(u => {
+    const p = getPlayerById(u.playerId);
+    return `<tr>
+      <td class="player-name">${p ? p.name : '—'}</td>
+      <td>${statusBadge(u.status)}</td>
+      <td style="color:var(--text-muted);font-size:13px;">${u.note || '—'}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted);">${formatDate(u.date)}</td>
+      <td style="font-size:12px;color:var(--text-muted);">${u.by}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderStatusChart(counts) {
+  const ctx = document.getElementById('statusChart').getContext('2d');
+  if (statusChartInstance) statusChartInstance.destroy();
+  statusChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Fit', 'Fit m. klachten', 'Restricties', 'Geblesseerd'],
+      datasets: [{
+        data: [counts.fit, counts['fit-complaints'], counts.restricted, counts.injured],
+        backgroundColor: ['#2D7A3A', '#5B8A2F', '#C76A00', '#B42C2C'],
+        borderWidth: 0,
+      }]
+    },
+    options: {
+      cutout: '65%',
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 12, family: "'DM Sans'" }, padding: 14 } } },
+      responsive: true, maintainAspectRatio: false,
+    }
+  });
+}
+
+function renderBodypartChart() {
+  const parts = { 'Enkel': 2, 'Knie': 1, 'Rug': 1, 'Hamstring': 1, 'Schouder': 1, 'Voet': 1, 'Pols': 1 };
+  const ctx = document.getElementById('bodypartChart').getContext('2d');
+  if (bodypartChartInstance) bodypartChartInstance.destroy();
+  bodypartChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(parts),
+      datasets: [{
+        label: 'Gevallen',
+        data: Object.values(parts),
+        backgroundColor: '#0B1F3A',
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid: { color: '#E2DDD5' }, ticks: { font: { size: 11 }, color: '#6B6560', stepSize: 1 } },
+        y: { grid: { display: false }, ticks: { font: { size: 12 }, color: '#1A1612' } }
+      }
+    }
+  });
+}
+
+// ============================================================
+// SPELERS
+// ============================================================
+function renderSpelers(filter, search) {
+  filter = filter || activeFilter.spelers;
+  search = search || '';
+  let list = players;
+  if (filter !== 'all') list = list.filter(p => getLatestStatus(p.id).status === filter);
+  if (search) list = list.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+
+  const tbody = document.getElementById('spelersTableBody');
+  tbody.innerHTML = list.map(p => {
+    const s = getLatestStatus(p.id);
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted);">${p.number}</td>
+      <td>
+        <div class="player-name">${p.name}</div>
+      </td>
+      <td><span class="tag">${p.pos}</span></td>
+      <td style="font-size:13px;color:var(--text-muted);">${p.club}</td>
+      <td>${statusBadge(s.status)}</td>
+      <td style="font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace;">${formatDate(s.date)}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="openPlayerDetail(${p.id})">Detail →</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterSpelers(f, btn) {
+  activeFilter.spelers = f;
+  document.querySelectorAll('#page-spelers .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderSpelers(f);
+}
+
+function searchSpelers(val) { renderSpelers(activeFilter.spelers, val); }
+
+function openPlayerDetail(id) {
+  const p = getPlayerById(id);
+  const s = getLatestStatus(id);
+  const hist = medicalHistory.filter(h => h.playerId === id);
+  const allUpdates = statusUpdates.filter(u => u.playerId === id).sort((a, b) => b.date.localeCompare(a.date));
+
+  document.getElementById('spelersListView').style.display = 'none';
+  document.getElementById('spelersDetailView').style.display = 'block';
+
+  document.getElementById('playerDetailContent').innerHTML = `
+    <div class="player-header">
+      <div class="player-avatar">${initials(p.name)}</div>
+      <div class="player-info">
+        <h2>${p.name}</h2>
+        <p>#${p.number} · ${p.pos} · ${p.club}</p>
+        <div style="margin-top:8px;">${statusBadge(s.status)}</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn btn-gold btn-sm" onclick="generatePlayerPDF(${p.id})">📄 PDF rapport</button>
+        <button class="btn btn-outline btn-sm" onclick="openUpdateModalForPlayer(${p.id})">Status updaten</button>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Persoonlijke gegevens</div>
+        <div class="info-row"><span class="info-label">Geboortedatum</span><span class="info-value">${formatDate(p.dob)}</span></div>
+        <div class="info-row"><span class="info-label">Lengte</span><span class="info-value">${p.height} cm</span></div>
+        <div class="info-row"><span class="info-label">Club</span><span class="info-value">${p.club}</span></div>
+        <div class="info-row"><span class="info-label">Contact</span><span class="info-value" style="color:var(--cats-navy);">${p.contact}</span></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Huidige status</div>
+        <div class="info-row"><span class="info-label">Status</span><span class="info-value">${statusLabel(s.status)}</span></div>
+        <div class="info-row"><span class="info-label">Notitie</span><span class="info-value">${s.note || '—'}</span></div>
+        <div class="info-row"><span class="info-label">Datum</span><span class="info-value">${formatDate(s.date)}</span></div>
+        <div class="info-row"><span class="info-label">Door</span><span class="info-value">${s.by}</span></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Statusgeschiedenis</div>
+        <div class="timeline">
+          ${allUpdates.length ? allUpdates.map(u => `
+            <div class="timeline-item ${u.status}">
+              <div class="timeline-date">${formatDate(u.date)} · ${u.by}</div>
+              <div class="timeline-content">${statusLabel(u.status)}${u.note ? ' — ' + u.note : ''}</div>
+            </div>
+          `).join('') : '<div style="color:var(--text-muted);font-size:13px;">Geen updates</div>'}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Medische geschiedenis</div>
+        <div class="timeline">
+          ${hist.length ? hist.map(h => `
+            <div class="timeline-item">
+              <div class="timeline-date">${formatDate(h.date)} · ${h.type}</div>
+              <div class="timeline-content">${h.description}</div>
+              <div style="font-size:11px;color:var(--text-muted);">${h.by}</div>
+            </div>
+          `).join('') : '<div style="color:var(--text-muted);font-size:13px;">Geen medische dossiers</div>'}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function closePlayerDetail() {
+  document.getElementById('spelersListView').style.display = 'block';
+  document.getElementById('spelersDetailView').style.display = 'none';
+}
+
+// ============================================================
+// DAGSTATUS
+// ============================================================
+function renderDagstatus(filter) {
+  filter = filter || activeFilter.dag;
+  document.getElementById('dagstatusDate').textContent = formatDate(today());
+  const grid = document.getElementById('dagstatusGrid');
+  let list = players;
+  if (filter !== 'all') list = list.filter(p => getLatestStatus(p.id).status === filter);
+
+  grid.innerHTML = list.map(p => {
+    const s = getLatestStatus(p.id);
+    return `<div class="status-cell ${s.status}" onclick="openUpdateModalForPlayer(${p.id})">
+      <div class="status-cell-name">${p.name}</div>
+      <div>${statusBadge(s.status)}</div>
+      ${s.note ? `<div style="font-size:11px;color:var(--text-muted);margin-top:4px;white-space:normal;">${s.note}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function filterDag(f, btn) {
+  activeFilter.dag = f;
+  document.querySelectorAll('#page-dagstatus .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDagstatus(f);
+}
+
+function exportDagstatus() {
+  generateDagPDF();
+}
+
+// ============================================================
+// STATUS UPDATE MODAL
+// ============================================================
+function openUpdateModal() {
+  const sel = document.getElementById('updatePlayer');
+  sel.innerHTML = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  document.getElementById('updateDate').value = today();
+  openModal('updateModal');
+}
+
+function openUpdateModalForPlayer(id) {
+  openUpdateModal();
+  document.getElementById('updatePlayer').value = id;
+}
+
+function submitStatusUpdate() {
+  const playerId = parseInt(document.getElementById('updatePlayer').value);
+  const status = document.getElementById('updateStatus').value;
+  const note = document.getElementById('updateNote').value;
+  const date = document.getElementById('updateDate').value;
+  const by = document.getElementById('updateBy').value || 'Staf';
+
+  statusUpdates.push({ id: Date.now(), playerId, status, note, date, by });
+  closeModal('updateModal');
+  showToast('Status succesvol opgeslagen ✓');
+  renderDagstatus();
+  renderHome();
+}
+
+// ============================================================
+// WEEKRAPPORT
+// ============================================================
+function renderWeekrapport() {
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay() + 1 + (currentWeekOffset * 7));
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    return d.toISOString().split('T')[0];
+  });
+
+  const dayNames = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
+  document.getElementById('weekLabel').textContent = `${formatDate(days[0])} – ${formatDate(days[6])}`;
+
+  // Header
+  const header = document.getElementById('weekTableHeader');
+  header.innerHTML = `<th>Speler</th>` + days.map((d, i) => `<th>${dayNames[i]}<br><span style="font-size:10px;font-weight:400;">${d.slice(5)}</span></th>`).join('');
+
+  // Body
+  const tbody = document.getElementById('weekTableBody');
+  const statusColors = { fit: '#2D7A3A', 'fit-complaints': '#5B8A2F', restricted: '#C76A00', injured: '#B42C2C', '—': '#E2DDD5' };
+  const statusLetters = { fit: 'F', 'fit-complaints': 'K', restricted: 'R', injured: 'G', '—': '—' };
+
+  tbody.innerHTML = players.map(p => {
+    const cells = days.map(day => {
+      const update = statusUpdates.filter(u => u.playerId === p.id && u.date <= day).sort((a, b) => b.date.localeCompare(a.date))[0];
+      const s = update ? update.status : '—';
+      const color = statusColors[s];
+      const letter = statusLetters[s];
+      return `<td title="${statusLabel(s)}" style="text-align:center;">
+        <span style="display:inline-block;width:24px;height:24px;border-radius:4px;background:${color};color:#fff;font-size:11px;font-weight:600;line-height:24px;">${letter}</span>
+      </td>`;
+    }).join('');
+    return `<tr><td class="player-name" style="white-space:nowrap;">${p.name}</td>${cells}</tr>`;
+  }).join('');
+
+  // Stats
+  const avgFit = players.filter(p => getLatestStatus(p.id).status === 'fit' || getLatestStatus(p.id).status === 'fit-complaints').length;
+  const avgRest = players.filter(p => getLatestStatus(p.id).status === 'restricted').length;
+  const avgInj = players.filter(p => getLatestStatus(p.id).status === 'injured').length;
+  document.getElementById('week-fit').textContent = avgFit;
+  document.getElementById('week-rest').textContent = avgRest;
+  document.getElementById('week-inj').textContent = avgInj;
+
+  // Notes
+  const notes = statusUpdates.filter(u => u.note && days.includes(u.date));
+  document.getElementById('weekNotes').innerHTML = notes.length ? notes.map(u => {
+    const p = getPlayerById(u.playerId);
+    return `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13.5px;">
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text-muted);">${formatDate(u.date)}</span> ·
+      <strong>${p ? p.name : '—'}</strong> (${statusLabel(u.status)}) — ${u.note} <span style="font-size:11px;color:var(--text-muted);">[${u.by}]</span>
+    </div>`;
+  }).join('') : '<div style="color:var(--text-muted);font-size:13px;">Geen notities deze week</div>';
+}
+
+function weekNav(dir) {
+  currentWeekOffset += dir;
+  renderWeekrapport();
+}
+
+// ============================================================
+// MEDISCH RAPPORT
+// ============================================================
+function renderMedisch() {
+  const sel = document.getElementById('medischPlayerSelect');
+  sel.innerHTML = '<option value="">— Selecteer speler —</option>' + players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+function loadMedischRapport(id) {
+  if (!id) { document.getElementById('medischContent').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div>Selecteer een speler om het medisch rapport te bekijken</div></div>'; return; }
+  id = parseInt(id);
+  const p = getPlayerById(id);
+  const s = getLatestStatus(id);
+  const hist = medicalHistory.filter(h => h.playerId === id);
+  const updates = statusUpdates.filter(u => u.playerId === id).sort((a, b) => b.date.localeCompare(a.date));
+
+  document.getElementById('medischContent').innerHTML = `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+        <div>
+          <div style="font-size:18px;font-weight:600;">${p.name}</div>
+          <div style="font-size:13px;color:var(--text-muted);">#${p.number} · ${p.pos} · ${p.club}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-gold" onclick="generatePlayerPDF(${p.id})">📄 Exporteer PDF</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="card-title">Huidige status</div>
+          ${statusBadge(s.status)}
+          <div style="margin-top:10px;font-size:13px;">${s.note || 'Geen actieve klachten'}</div>
+          <div style="margin-top:4px;font-size:11px;color:var(--text-muted);">Laatste update: ${formatDate(s.date)} door ${s.by}</div>
+        </div>
+        <div>
+          <div class="card-title">Persoonlijk dossier</div>
+          <div class="info-row"><span class="info-label">Geboortedatum</span><span class="info-value">${formatDate(p.dob)}</span></div>
+          <div class="info-row"><span class="info-label">Lengte</span><span class="info-value">${p.height} cm</span></div>
+          <div class="info-row"><span class="info-label">Contact</span><span class="info-value">${p.contact}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Medische geschiedenis</div>
+      ${hist.length ? `<table>
+        <thead><tr><th>Datum</th><th>Type</th><th>Beschrijving</th><th>Door</th></tr></thead>
+        <tbody>${hist.map(h => `<tr>
+          <td style="font-family:'DM Mono',monospace;font-size:12px;">${formatDate(h.date)}</td>
+          <td><span class="tag">${h.type}</span></td>
+          <td style="font-size:13px;">${h.description}</td>
+          <td style="font-size:12px;color:var(--text-muted);">${h.by}</td>
+        </tr>`).join('')}</tbody>
+      </table>` : '<div style="color:var(--text-muted);font-size:13px;padding:20px 0;">Geen medische dossiers beschikbaar</div>'}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Alle statuswijzigingen</div>
+      <table>
+        <thead><tr><th>Datum</th><th>Status</th><th>Notitie</th><th>Door</th></tr></thead>
+        <tbody>${updates.map(u => `<tr>
+          <td style="font-family:'DM Mono',monospace;font-size:12px;">${formatDate(u.date)}</td>
+          <td>${statusBadge(u.status)}</td>
+          <td style="font-size:13px;color:var(--text-muted);">${u.note || '—'}</td>
+          <td style="font-size:12px;color:var(--text-muted);">${u.by}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ============================================================
+// FORMS
+// ============================================================
+function renderForms() {
+  const tbody = document.getElementById('formLogsTable');
+  tbody.innerHTML = formLogs.sort((a, b) => b.date.localeCompare(a.date)).map(f => {
+    const p = getPlayerById(f.playerId);
+    return `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;">${formatDate(f.date)}</td>
+      <td><span class="tag">${f.type}</span></td>
+      <td>${p ? p.name : '—'}</td>
+      <td style="font-size:13px;color:var(--text-muted);">${f.by}</td>
+      <td style="font-size:13px;color:var(--text-muted);">${f.note}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openFormModal(type) {
+  const titles = { arts: 'Arts — Medisch formulier', kine: 'Kinesist — Behandelformulier', physical: 'Physical trainer — Trainingsformulier' };
+  document.getElementById('staffFormTitle').textContent = titles[type];
+  const playerOptions = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+  let formHTML = `<div class="form-grid">
+    <div class="form-group"><label>Speler</label><select id="sf-player">${playerOptions}</select></div>
+    <div class="form-group"><label>Datum</label><input type="date" id="sf-date" value="${today()}"></div>
+    <div class="form-group"><label>Ingevoerd door</label><input type="text" id="sf-by" placeholder="Naam"></div>`;
+
+  if (type === 'arts') {
+    formHTML += `
+    <div class="form-group"><label>Diagnose</label><input type="text" id="sf-diagnose" placeholder="Diagnose omschrijving"></div>
+    <div class="form-group"><label>Lichaamsdeel</label>
+      <select id="sf-part"><option>Enkel</option><option>Knie</option><option>Hamstring</option><option>Rug</option><option>Schouder</option><option>Pols</option><option>Voet</option><option>Hoofd</option><option>Andere</option></select>
+    </div>
+    <div class="form-group"><label>Ernst</label>
+      <select id="sf-ernst"><option>Graad 1</option><option>Graad 2</option><option>Graad 3</option><option>Niet van toepassing</option></select>
+    </div>
+    <div class="form-group full"><label>Medicatie</label><input type="text" id="sf-meds" placeholder="Medicatie + dosis"></div>
+    <div class="form-group full"><label>Opmerkingen</label><textarea id="sf-notes"></textarea></div>`;
+  } else if (type === 'kine') {
+    formHTML += `
+    <div class="form-group"><label>Status vandaag</label>
+      <select id="sf-status"><option value="fit">Fit</option><option value="fit-complaints">Fit met klachten</option><option value="restricted">Restricties</option><option value="injured">Geblesseerd</option></select>
+    </div>
+    <div class="form-group full"><label>Behandeling</label><input type="text" id="sf-treatment" placeholder="Behandeling omschrijving"></div>
+    <div class="form-group full"><label>Revalidatieplan</label><textarea id="sf-rehab" placeholder="Plan + verwachte terugkeer"></textarea></div>
+    <div class="form-group full"><label>Notitie</label><textarea id="sf-notes"></textarea></div>`;
+  } else {
+    formHTML += `
+    <div class="form-group"><label>Trainingsbelasting</label>
+      <select id="sf-load"><option>Normaal</option><option>Verminderd</option><option>Geen training</option><option>Individueel</option></select>
+    </div>
+    <div class="form-group"><label>Readiness score (1–10)</label><input type="number" id="sf-readiness" min="1" max="10" value="8"></div>
+    <div class="form-group full"><label>Notitie</label><textarea id="sf-notes"></textarea></div>`;
+  }
+
+  formHTML += `</div><div class="btn-row">
+    <button class="btn btn-primary" onclick="submitStaffForm('${type}')">Opslaan</button>
+    <button class="btn btn-outline" onclick="closeModal('staffFormModal')">Annuleren</button>
+  </div>`;
+
+  document.getElementById('staffFormContent').innerHTML = formHTML;
+  openModal('staffFormModal');
+}
+
+function submitStaffForm(type) {
+  const playerId = parseInt(document.getElementById('sf-player').value);
+  const date = document.getElementById('sf-date').value;
+  const by = document.getElementById('sf-by').value || 'Staf';
+  const note = document.getElementById('sf-notes') ? document.getElementById('sf-notes').value : '';
+
+  formLogs.push({ date, type: type === 'arts' ? 'Arts' : type === 'kine' ? 'Kine' : 'Physical', playerId, by, note });
+
+  if (type === 'kine' && document.getElementById('sf-status')) {
+    const status = document.getElementById('sf-status').value;
+    statusUpdates.push({ id: Date.now(), playerId, status, note, date, by });
+  }
+
+  if (type === 'arts' && document.getElementById('sf-diagnose')) {
+    const desc = document.getElementById('sf-diagnose').value;
+    if (desc) medicalHistory.push({ playerId, date, type: 'Diagnose', description: desc, by });
+    statusUpdates.push({ id: Date.now(), playerId, status: 'injured', note: desc, date, by });
+  }
+
+  closeModal('staffFormModal');
+  showToast('Formulier opgeslagen ✓');
+  renderForms();
+}
+
+// ============================================================
+// MAIL
+// ============================================================
+function previewMail() {
+  const body = document.getElementById('mailBody').value;
+  const attachment = document.getElementById('mailAttachment').value;
+  document.getElementById('mailPreviewContent').innerHTML = `
+    <p style="white-space:pre-line;margin-bottom:16px;">${body}</p>
+    <hr style="border:none;border-top:1px solid #e2ddd5;margin:16px 0;">
+    <p style="font-size:12px;color:var(--text-muted);">📎 Bijlage: ${attachment === 'weekrapport' ? 'Weekrapport_BelgianCats.pdf' : 'Dagrapport_BelgianCats.pdf'}</p>
+    <div style="margin-top:16px;padding:12px;background:#f4f1eb;border-radius:6px;font-size:12px;color:var(--text-muted);">
+      <strong>Belgian Cats — Medische Staf</strong><br>
+      Basketball Belgium · Medisch portaal
+    </div>
+  `;
+  showToast('Preview bijgewerkt');
+}
+
+function sendMailReport() {
+  const to = document.getElementById('mailTo').value;
+  const subject = document.getElementById('mailSubject').value;
+  const body = encodeURIComponent(document.getElementById('mailBody').value);
+  window.location.href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${body}`;
+  showToast('Mail client geopend ✓');
+}
+
+// ============================================================
+// PDF GENERATION
+// ============================================================
+function generatePlayerPDF(playerId) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const p = getPlayerById(playerId);
+  const s = getLatestStatus(playerId);
+  const hist = medicalHistory.filter(h => h.playerId === playerId);
+  const updates = statusUpdates.filter(u => u.playerId === playerId).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+
+  const W = 210, margin = 20;
+
+  // Header
+  doc.setFillColor(11, 31, 58);
+  doc.rect(0, 0, W, 40, 'F');
+  doc.setTextColor(200, 146, 42);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('BELGIAN CATS — MEDISCH RAPPORT', margin, 14);
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.text(p.name, margin, 26);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`#${p.number} · ${p.pos} · ${p.club}`, margin, 34);
+  doc.text(`Gegenereerd: ${formatDate(today())}`, W - margin - 60, 34);
+
+  // Status badge
+  const statusColors2 = { fit: [45, 122, 58], 'fit-complaints': [91, 138, 47], restricted: [199, 106, 0], injured: [180, 44, 44] };
+  const [r, g, b] = statusColors2[s.status];
+  doc.setFillColor(r, g, b);
+  doc.roundedRect(margin, 48, 60, 10, 2, 2, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text(statusLabel(s.status).toUpperCase(), margin + 4, 55);
+
+  // Sections
+  let y = 68;
+
+  const section = (title) => {
+    doc.setTextColor(11, 31, 58);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text(title, margin, y);
+    doc.setDrawColor(226, 221, 213);
+    doc.line(margin, y + 2, W - margin, y + 2);
+    y += 10;
+  };
+
+  const row = (label, value) => {
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(107, 101, 96);
+    doc.text(label, margin, y);
+    doc.setTextColor(26, 22, 18);
+    doc.setFont('helvetica', 'bold');
+    doc.text(String(value || '—'), margin + 45, y);
+    y += 7;
+  };
+
+  section('Persoonlijke gegevens');
+  row('Geboortedatum', formatDate(p.dob));
+  row('Lengte', `${p.height} cm`);
+  row('Club', p.club);
+  row('Contact', p.contact);
+
+  y += 4;
+  section('Huidige status');
+  row('Status', statusLabel(s.status));
+  row('Notitie', s.note || 'Geen actieve klachten');
+  row('Datum update', formatDate(s.date));
+  row('Ingevoerd door', s.by);
+
+  if (hist.length) {
+    y += 4;
+    section('Medische geschiedenis');
+    hist.forEach(h => {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(26, 22, 18);
+      doc.text(`${formatDate(h.date)} · ${h.type}`, margin, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(107, 101, 96);
+      const lines = doc.splitTextToSize(h.description, W - margin * 2 - 10);
+      doc.text(lines, margin + 4, y + 5);
+      y += 5 + (lines.length * 5) + 3;
+    });
+  }
+
+  y += 4;
+  section('Statusgeschiedenis');
+  updates.forEach(u => {
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(107, 101, 96);
+    doc.text(`${formatDate(u.date)}`, margin, y);
+    doc.setTextColor(26, 22, 18);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${statusLabel(u.status)}`, margin + 28, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(107, 101, 96);
+    if (u.note) doc.text(`— ${u.note}`, margin + 60, y);
+    y += 6;
+  });
+
+  // Footer
+  doc.setFillColor(248, 245, 239);
+  doc.rect(0, 280, W, 17, 'F');
+  doc.setTextColor(107, 101, 96);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Belgian Cats — Medische Staf · Vertrouwelijk document', margin, 290);
+  doc.text(`Pagina 1`, W - margin - 10, 290);
+
+  doc.save(`MedischRapport_${p.name.replace(/\s/g, '_')}_${today()}.pdf`);
+  showToast(`PDF gegenereerd voor ${p.name} ✓`);
+}
+
+function generateWeekPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const W = 297, H = 210, margin = 16;
+
+  doc.setFillColor(11, 31, 58);
+  doc.rect(0, 0, W, 36, 'F');
+  doc.setTextColor(200, 146, 42);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('BELGIAN CATS — MEDISCHE OPVOLGING', margin, 13);
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.text('Weekrapport', margin, 26);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Gegenereerd: ${formatDate(today())}`, W - margin - 60, 26);
+
+  let y = 46;
+  doc.setFontSize(9);
+  const cols = [40, 55, 72, 89, 106, 123, 140, 157];
+  const dayNames = ['Speler', 'Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'];
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(107, 101, 96);
+  dayNames.forEach((d, i) => doc.text(d, margin + (cols[i] || i * 22), y));
+  y += 3;
+  doc.setDrawColor(226, 221, 213);
+  doc.line(margin, y, W - margin, y);
+  y += 5;
+
+  const statusColors2 = { fit: [45, 122, 58], 'fit-complaints': [91, 138, 47], restricted: [199, 106, 0], injured: [180, 44, 44], '—': [200, 200, 200] };
+  const statusLetters = { fit: 'F', 'fit-complaints': 'K', restricted: 'R', injured: 'G', '—': '—' };
+
+  players.slice(0, 22).forEach(p => {
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(26, 22, 18);
+    doc.setFontSize(8.5);
+    doc.text(p.name, margin, y + 3.5);
+    const s = getLatestStatus(p.id).status;
+    for (let d = 1; d < 8; d++) {
+      const [r, g, b] = statusColors2[s];
+      doc.setFillColor(r, g, b);
+      doc.roundedRect(margin + cols[d] - 2, y - 0.5, 12, 7, 1, 1, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.text(statusLetters[s], margin + cols[d] + 2.5, y + 4.2);
+    }
+    y += 9;
+    if (y > H - 20) { doc.addPage(); y = 16; }
+  });
+
+  doc.setFillColor(248, 245, 239);
+  doc.rect(0, H - 14, W, 14, 'F');
+  doc.setTextColor(107, 101, 96);
+  doc.setFontSize(7.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Belgian Cats — Medische Staf · Vertrouwelijk', margin, H - 5);
+  doc.text('F = Fit  |  K = Klachten  |  R = Restricties  |  G = Geblesseerd', W / 2 - 40, H - 5);
+
+  doc.save(`Weekrapport_BelgianCats_${today()}.pdf`);
+  showToast('Weekrapport PDF gegenereerd ✓');
+}
+
+function generateDagPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const W = 210, margin = 20;
+
+  doc.setFillColor(11, 31, 58);
+  doc.rect(0, 0, W, 40, 'F');
+  doc.setTextColor(200, 146, 42);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('BELGIAN CATS — DAGRAPPORT', margin, 14);
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.text('Dagstatus', margin, 26);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(formatDate(today()), margin, 34);
+
+  let y = 52;
+  players.forEach(p => {
+    const s = getLatestStatus(p.id);
+    const colors2 = { fit: [45, 122, 58], 'fit-complaints': [91, 138, 47], restricted: [199, 106, 0], injured: [180, 44, 44] };
+    const [r, g, b] = colors2[s.status];
+    doc.setFillColor(r, g, b);
+    doc.circle(margin + 2, y + 1.5, 2, 'F');
+    doc.setTextColor(26, 22, 18);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text(p.name, margin + 8, y + 3);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(107, 101, 96);
+    doc.text(statusLabel(s.status), margin + 80, y + 3);
+    if (s.note) doc.text(s.note, margin + 110, y + 3);
+    y += 8;
+    if (y > 270) { doc.addPage(); y = 20; }
+  });
+
+  doc.save(`Dagrapport_BelgianCats_${today()}.pdf`);
+  showToast('Dagrapport PDF gegenereerd ✓');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  document.getElementById('topbarDate').textContent = formatDate(today());
+  document.getElementById('dagstatusDate').textContent = formatDate(today());
+
+  // Pre-fill update modal player list
+  const sel = document.getElementById('updatePlayer');
+  sel.innerHTML = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+  document.getElementById('updateDate').value = today();
+
+  renderHome();
+
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+  });
+}
+
+init();
+</script>
+</body>
+</html>
