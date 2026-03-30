@@ -6,6 +6,7 @@
 <title>Belgian Cats — Medische Opvolging</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
@@ -458,24 +459,118 @@
   .inj-type-label { font-size: 13px; min-width: 120px; }
   .inj-type-count { font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-left: auto; }
 
-  /* RESPONSIVE */
+  /* HAMBURGER */
+  .hamburger {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    color: var(--text);
+    border-radius: 6px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+  }
+  .hamburger:hover { background: var(--bg); }
+
+  /* SIDEBAR OVERLAY */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 99;
+  }
+  .sidebar-overlay.open { display: block; }
+
+  /* ── 900px: tablet landscape ── */
   @media (max-width: 900px) {
     .sidebar { width: 60px; }
-    .sidebar-logo, .nav-section, .nav-item span, .logo-title, .logo-sub, .logo-cat, .sidebar-footer { display: none; }
-    .nav-icon { width: 100%; text-align: center; }
-    .nav-item { padding: 12px; justify-content: center; border-left: none; border-bottom: 3px solid transparent; }
+    .sidebar-logo, .nav-section, .nav-item span, .logo-sub, .sidebar-footer { display: none; }
+    .nav-icon { width: 100%; text-align: center; font-size: 18px; }
+    .nav-item { padding: 14px; justify-content: center; border-left: none; border-bottom: 3px solid transparent; }
     .nav-item.active { border-bottom-color: var(--cats-gold); background: rgba(200,146,42,0.08); }
     .main { margin-left: 60px; }
     .grid-4 { grid-template-columns: repeat(2, 1fr); }
-    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: repeat(2, 1fr); }
     .status-grid { grid-template-columns: repeat(3, 1fr); }
     .form-grid { grid-template-columns: 1fr; }
   }
 
-  @media (max-width: 600px) {
-    .grid-4 { grid-template-columns: repeat(2, 1fr); }
-    .status-grid { grid-template-columns: repeat(2, 1fr); }
+  /* ── 768px: mobiel ── */
+  @media (max-width: 768px) {
+    .hamburger { display: flex; }
+
+    .sidebar {
+      width: var(--sidebar-w);
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      z-index: 100;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar.open .sidebar-logo,
+    .sidebar.open .nav-section,
+    .sidebar.open .nav-item span,
+    .sidebar.open .logo-sub,
+    .sidebar.open .sidebar-footer { display: block; }
+    .sidebar.open .nav-item { padding: 9px 20px; justify-content: flex-start; border-left: 3px solid transparent; border-bottom: none; }
+    .sidebar.open .nav-item.active { border-left-color: var(--cats-gold); border-bottom: none; }
+    .sidebar.open .nav-icon { width: 16px; font-size: 15px; }
+
+    .main { margin-left: 0; }
     .content { padding: 16px; }
+    .topbar { padding: 12px 16px; gap: 10px; }
+    .topbar-title { font-size: 14px; }
+
+    .grid-4 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .status-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-grid { grid-template-columns: 1fr; }
+
+    .stat-value { font-size: 26px; }
+    .stat-card { padding: 14px 16px; }
+
+    /* Tabellen: horizontaal scrollen */
+    .card { overflow-x: auto; }
+    table { min-width: 480px; }
+    #page-weekrapport table { min-width: 640px; }
+
+    /* Section header wrapping */
+    .section-header { flex-wrap: wrap; gap: 10px; }
+    .week-header { flex-wrap: wrap; gap: 10px; }
+    .week-header > div { flex-wrap: wrap; gap: 6px; }
+
+    /* Speler detail header stapelen */
+    .player-header { flex-wrap: wrap; }
+    .player-header > div[style*="margin-left"] { margin-left: 0 !important; width: 100%; }
+
+    /* Modal: slide omhoog */
+    .modal-overlay { align-items: flex-end; }
+    .modal { width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; padding: 24px 20px; max-height: 92vh; }
+
+    /* Toast: breed onderaan */
+    .toast { right: 16px; left: 16px; bottom: 16px; text-align: center; }
+
+    /* Zoekbalk: volledige breedte */
+    .search-input { width: 100%; margin-left: 0; }
+
+    /* Knoppenrijen stapelen */
+    .btn-row { flex-direction: column; }
+    .btn-row .btn { width: 100%; text-align: center; }
+  }
+
+  /* ── 480px: kleine telefoons ── */
+  @media (max-width: 480px) {
+    .stat-value { font-size: 22px; }
+    .content { padding: 12px; }
+    .card { padding: 16px; }
+    .player-avatar { width: 48px; height: 48px; font-size: 16px; }
+    .player-info h2 { font-size: 16px; }
+    .filter-btn { padding: 5px 10px; font-size: 11px; }
+    .status-grid { grid-template-columns: repeat(2, 1fr); }
+    .week-nav-btn { padding: 6px 10px; font-size: 12px; }
   }
 
   .tag {
@@ -513,11 +608,12 @@
 </head>
 <body>
 
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-cat">Belgian Cats</div>
-    <div class="logo-title">Medische<br>Opvolging</div>
+    <img src="belgian-cats-logo.png" alt="Belgian Cats" style="width:100%;max-width:160px;display:block;margin:0 auto 8px;filter:brightness(0) invert(1);">
     <div class="logo-sub">Medische Staf Portaal</div>
   </div>
   <nav>
@@ -546,6 +642,10 @@
     <div class="nav-item" onclick="showPage('mail')">
       <span class="nav-icon">✉</span><span>Mail rapport</span>
     </div>
+    <div class="nav-section">Contacten</div>
+    <div class="nav-item" onclick="showPage('medcontacten')">
+      <span class="nav-icon">☎</span><span>Medische contacten</span>
+    </div>
   </nav>
   <div class="sidebar-footer">v1.0 · 2025</div>
 </aside>
@@ -553,6 +653,11 @@
 <!-- MAIN -->
 <main class="main">
   <div class="topbar">
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Menu openen">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
     <div class="topbar-title" id="topbarTitle">Dashboard</div>
     <div class="topbar-date" id="topbarDate"></div>
   </div>
@@ -859,6 +964,29 @@ Medische staf Belgian Cats</textarea>
       </div>
     </div>
 
+    <!-- ===== MEDISCHE CONTACTEN ===== -->
+    <div class="page" id="page-medcontacten">
+      <div class="section-header" style="margin-bottom:16px;">
+        <div class="section-title">Medische contacten</div>
+        <div style="display:flex;gap:8px;" id="mcCrudButtons">
+          <button class="btn btn-outline btn-sm" id="mcDeleteModeBtn" onclick="toggleMcDeleteMode()">Verwijderen</button>
+          <button class="btn btn-primary btn-sm" id="mcAddBtn" onclick="openMedicalContactModal()">+ Toevoegen</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border);">
+        <button id="mcTab-clubs" onclick="switchMcTab('clubs')" style="padding:8px 18px;font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--cats-navy);border-bottom:2px solid var(--cats-navy);margin-bottom:-2px;">Per club</button>
+        <button id="mcTab-all" onclick="switchMcTab('all')" style="padding:8px 18px;font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px;">Alle contacten</button>
+      </div>
+      <div id="mcDeleteBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--injured-bg);border:1px solid #f5b5b5;border-radius:8px;align-items:center;justify-content:space-between;gap:10px;">
+        <span id="mcDeleteCount" style="font-size:13px;color:var(--injured);">0 rijen geselecteerd</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-danger btn-sm" onclick="confirmMcDelete()">Verwijder geselecteerde</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleMcDeleteMode()">Annuleren</button>
+        </div>
+      </div>
+      <div id="medischeContactenContent"></div>
+    </div>
+
   </div><!-- /content -->
 </main>
 
@@ -914,77 +1042,154 @@ Medische staf Belgian Cats</textarea>
   </div>
 </div>
 
+<!-- ===== MODAL: Medisch contact ===== -->
+<div class="modal-overlay" id="medicalContactModal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-title">
+      <span id="medicalContactModalTitle">Contact toevoegen</span>
+      <span class="modal-close" onclick="closeModal('medicalContactModal')">×</span>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Club</label>
+        <input type="text" id="mc-club" placeholder="Club naam">
+      </div>
+      <div class="form-group full">
+        <label>Speelster(s) <span style="font-weight:400;color:var(--text-muted);">— vink aan</span></label>
+        <div id="mc-players-container" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;max-height:190px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--surface);"></div>
+      </div>
+      <div class="form-group full" style="background:var(--bg);border-radius:8px;padding:12px;margin-top:4px;">
+        <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">🏃 Kinesist</div>
+        <div class="form-grid" style="padding:0;">
+          <div class="form-group"><label>Naam</label><input type="text" id="mc-physio-name" placeholder="Naam"></div>
+          <div class="form-group"><label>E-mail</label><input type="email" id="mc-physio-email" placeholder="email@voorbeeld.be"></div>
+          <div class="form-group"><label>Tel</label><input type="text" id="mc-physio-tel" placeholder="Telefoonnummer"></div>
+        </div>
+      </div>
+      <div class="form-group full" style="background:var(--bg);border-radius:8px;padding:12px;">
+        <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">🩺 Arts</div>
+        <div class="form-grid" style="padding:0;">
+          <div class="form-group"><label>Naam</label><input type="text" id="mc-doc-name" placeholder="Naam"></div>
+          <div class="form-group"><label>E-mail</label><input type="email" id="mc-doc-email" placeholder="email@voorbeeld.be"></div>
+          <div class="form-group"><label>Tel</label><input type="text" id="mc-doc-tel" placeholder="Telefoonnummer"></div>
+        </div>
+      </div>
+      <div class="form-group full" style="background:var(--bg);border-radius:8px;padding:12px;">
+        <div style="font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;">👤 Manager / Coach</div>
+        <div class="form-grid" style="padding:0;">
+          <div class="form-group"><label>Naam</label><input type="text" id="mc-manager-name" placeholder="Naam"></div>
+          <div class="form-group"><label>E-mail</label><input type="email" id="mc-manager-email" placeholder="email@voorbeeld.be"></div>
+          <div class="form-group"><label>Tel</label><input type="text" id="mc-manager-tel" placeholder="Telefoonnummer"></div>
+        </div>
+      </div>
+    </div>
+    <input type="hidden" id="mc-edit-id">
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveMedicalContact()">Opslaan</button>
+      <button class="btn btn-outline" onclick="closeModal('medicalContactModal')">Annuleren</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
 // ============================================================
+// SUPABASE
+// ============================================================
+const SUPABASE_URL = 'https://ycyvqoqgcjtcurliprmt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_pTB_5K8cbSMsYi1FZjwFbg_clCd05Fk';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+function mapRow(u) { return u.player_id !== undefined ? { ...u, playerId: u.player_id } : u; }
+
+// ============================================================
 // DATA
 // ============================================================
-const players = [
-  { id: 1, name: "Julie Allemand", pos: "PG", number: 7, club: "Indiana Fever", dob: "1997-06-14", height: "170", contact: "julie@example.be" },
-  { id: 2, name: "Emma Meesseman", pos: "F", number: 8, club: "Indiana Fever", dob: "1993-05-25", height: "192", contact: "emma@example.be" },
-  { id: 3, name: "Kim Mestdagh", pos: "G", number: 3, club: "Basket Waregem", dob: "1990-05-15", height: "178", contact: "kim@example.be" },
-  { id: 4, name: "Antonia Delaere", pos: "G/F", number: 12, club: "Valencia BC", dob: "1997-02-18", height: "179", contact: "antonia@example.be" },
-  { id: 5, name: "Billie Massey", pos: "C", number: 15, club: "Basket Waregem", dob: "1997-09-08", height: "195", contact: "billie@example.be" },
-  { id: 6, name: "Hind Ben Abdelkader", pos: "F", number: 9, club: "Namur Capitale", dob: "1998-04-22", height: "183", contact: "hind@example.be" },
-  { id: 7, name: "Laure Resimont", pos: "G", number: 4, club: "Liège Panthers", dob: "1999-11-30", height: "172", contact: "laure@example.be" },
-  { id: 8, name: "Elisa Ramette", pos: "G", number: 6, club: "BLMA", dob: "2000-03-12", height: "174", contact: "elisa@example.be" },
-  { id: 9, name: "Kyara Linskens", pos: "C", number: 14, club: "Spar Girona", dob: "1998-01-05", height: "196", contact: "kyara@example.be" },
-  { id: 10, name: "Sara Blonde", pos: "G", number: 11, club: "Loon Lions", dob: "1999-07-27", height: "168", contact: "sara@example.be" },
-  { id: 11, name: "Amber Holt", pos: "F/C", number: 13, club: "Castors Braine", dob: "2001-09-14", height: "185", contact: "amber@example.be" },
-  { id: 12, name: "Tine Voet", pos: "G", number: 5, club: "Namur Capitale", dob: "2000-06-18", height: "170", contact: "tine@example.be" },
-  { id: 13, name: "Nastja Claessens", pos: "F", number: 16, club: "BLMA", dob: "2001-12-02", height: "180", contact: "nastja@example.be" },
-  { id: 14, name: "Maud Douvry", pos: "G", number: 2, club: "Castors Braine", dob: "1998-08-20", height: "171", contact: "maud@example.be" },
-  { id: 15, name: "Heleen Nauwelaers", pos: "F", number: 17, club: "Loon Lions", dob: "2002-04-09", height: "184", contact: "heleen@example.be" },
-  { id: 16, name: "Laure Verhaegen", pos: "G", number: 10, club: "Liège Panthers", dob: "2001-01-15", height: "173", contact: "laure.v@example.be" },
-  { id: 17, name: "Jana Van Dyck", pos: "G/F", number: 18, club: "Leuven Bears", dob: "2003-03-22", height: "177", contact: "jana@example.be" },
-  { id: 18, name: "Elien Aerts", pos: "C", number: 19, club: "Kangoeroes Mechelen", dob: "2002-10-11", height: "192", contact: "elien@example.be" },
-  { id: 19, name: "Lana Ghekiere", pos: "F", number: 20, club: "Basket Waregem", dob: "2000-07-03", height: "181", contact: "lana@example.be" },
-  { id: 20, name: "Silke Dronseika", pos: "G", number: 21, club: "Leuven Bears", dob: "2001-05-28", height: "169", contact: "silke@example.be" },
-  { id: 21, name: "Lore Mestdagh", pos: "G", number: 22, club: "Spar Girona", dob: "1992-11-07", height: "174", contact: "lore@example.be" },
-  { id: 22, name: "Hailey Van Lith", pos: "G", number: 23, club: "Charlotte Hornets", dob: "2003-01-10", height: "175", contact: "hailey@example.be" },
+let players = [
+  { id: 1,  name: "Julie Allemand",      pos: "PG",  number: 7,  club: "Fenerbahçe",              dob: "1997-06-14", height: "170", contact: "julie.allemand@belgianbasketball.be" },
+  { id: 2,  name: "Emma Meesseman",       pos: "F",   number: 8,  club: "Fenerbahçe",              dob: "1993-05-25", height: "192", contact: "emma.meesseman@belgianbasketball.be" },
+  { id: 3,  name: "Kim Mestdagh",         pos: "G",   number: 3,  club: "Schio",                   dob: "1990-05-15", height: "178", contact: "kim.mestdagh@belgianbasketball.be" },
+  { id: 4,  name: "Antonia Delaere",      pos: "G/F", number: 12, club: "Emlak Konut Spor Kulübü", dob: "1997-02-18", height: "179", contact: "antonia.delaere@belgianbasketball.be" },
+  { id: 5,  name: "Billie Massey",        pos: "C",   number: 15, club: "Hozono Global Jairis",    dob: "1997-09-08", height: "195", contact: "billie.massey@belgianbasketball.be" },
+  { id: 6,  name: "Hind Ben Abdelkader",  pos: "F",   number: 9,  club: "Galatasaray",             dob: "1998-04-22", height: "183", contact: "hind.benabdelkader@belgianbasketball.be" },
+  { id: 7,  name: "Laure Resimont",       pos: "G",   number: 4,  club: "Kangoeroes Mechelen",     dob: "1999-11-30", height: "172", contact: "laure.resimont@belgianbasketball.be" },
+  { id: 8,  name: "Elise Ramette",        pos: "G",   number: 6,  club: "Juventut Badalona",       dob: "2000-03-12", height: "174", contact: "elise.ramette@belgianbasketball.be" },
+  { id: 9,  name: "Kyara Linskens",       pos: "C",   number: 14, club: "Dynamo Kursk",            dob: "1998-01-05", height: "196", contact: "kyara.linskens@belgianbasketball.be" },
+  { id: 10, name: "Nastja Claessens",     pos: "F",   number: 16, club: "Kansas State University", dob: "2001-12-02", height: "180", contact: "nastja.claessens@belgianbasketball.be" },
+  { id: 11, name: "Julie Vanloo",         pos: "G",   number: 5,  club: "Mersin",                  dob: "1993-01-28", height: "172", contact: "julie.vanloo@belgianbasketball.be" },
+  { id: 12, name: "Alicia Courthiau",     pos: "G",   number: 10, club: "Royal Castors Braine",    dob: "2003-01-01", height: "175", contact: "alicia.courthiau@belgianbasketball.be" },
+  { id: 13, name: "Becky Massey",         pos: "G",   number: 2,  club: "Basket Landes",           dob: "2000-01-01", height: "170", contact: "becky.massey@belgianbasketball.be" },
+  { id: 14, name: "Maxuella Lisowa",      pos: "F",   number: 13, club: "Rode Ster Belgrado",      dob: "1998-01-01", height: "183", contact: "maxuella.lisowa@belgianbasketball.be" },
+  { id: 15, name: "Ine Joris",            pos: "G",   number: 17, club: "BAXI Ferrol",             dob: "2001-01-01", height: "174", contact: "ine.joris@belgianbasketball.be" },
+  { id: 16, name: "Bethy Mununga",        pos: "F/C", number: 18, club: "Maccabi Haifa",           dob: "1998-01-01", height: "187", contact: "bethy.mununga@belgianbasketball.be" },
+  { id: 17, name: "Laura Vilcinskas",     pos: "G",   number: 19, club: "Kangoeroes Mechelen",     dob: "2003-01-01", height: "173", contact: "laura.vilcinskas@belgianbasketball.be" },
+  { id: 18, name: "Wivine Defosset",      pos: "F",   number: 20, club: "Basket Namur Capitale",   dob: "1997-01-01", height: "182", contact: "wivine.defosset@belgianbasketball.be" },
+  { id: 19, name: "Zhen Verburgt",        pos: "G",   number: 21, club: "Ball State University",   dob: "2005-01-01", height: "170", contact: "zhen.verburgt@belgianbasketball.be" },
+  { id: 20, name: "Annie Kibedi",         pos: "F/C", number: 22, club: "Royal Castors Braine",    dob: "2001-01-01", height: "188", contact: "annie.kibedi@belgianbasketball.be" },
+  { id: 21, name: "Marie Vervaet",        pos: "G/F", number: 23, club: "Royal Castors Braine",    dob: "1999-01-01", height: "178", contact: "marie.vervaet@belgianbasketball.be" },
+  { id: 22, name: "René Denys",           pos: "G",   number: 24, club: "Royal Castors Braine",    dob: "2002-01-01", height: "171", contact: "rene.denys@belgianbasketball.be" },
+  { id: 23, name: "Serena-Lynn Geldof",   pos: "G/F", number: 25, club: "Casademont Zaragoza",     dob: "2001-01-01", height: "177", contact: "serena.geldof@belgianbasketball.be" },
+  { id: 24, name: "Habibatou Bah",        pos: "C",   number: 26, club: "Phantoms Boom",           dob: "1999-01-01", height: "192", contact: "habibatou.bah@belgianbasketball.be" },
+  { id: 25, name: "Morgane Armant",       pos: "F",   number: 27, club: "Royal Castors Braine",    dob: "2001-01-01", height: "181", contact: "morgane.armant@belgianbasketball.be" },
 ];
 
 let statusUpdates = [
-  { id: 1, playerId: 1, status: "fit", note: "Volledig fit", date: today(), by: "Dr. Peeters" },
-  { id: 2, playerId: 2, status: "injured", note: "Enkelblessure links — MRI gepland", date: today(), by: "Dr. Peeters" },
-  { id: 3, playerId: 3, status: "fit-complaints", note: "Lichte kniepijn na training", date: today(), by: "Kine Janssen" },
-  { id: 4, playerId: 4, status: "fit", note: "", date: today(), by: "Kine Janssen" },
-  { id: 5, playerId: 5, status: "restricted", note: "Rugklachten — geen sprongtraining", date: today(), by: "Physical De Wolf" },
-  { id: 6, playerId: 6, status: "fit", note: "", date: today(), by: "Dr. Peeters" },
-  { id: 7, playerId: 7, status: "injured", note: "Hamstring graad 2 rechts", date: today(), by: "Dr. Peeters" },
-  { id: 8, playerId: 8, status: "fit", note: "", date: today(), by: "Kine Janssen" },
-  { id: 9, playerId: 9, status: "fit-complaints", note: "Schouderpijn — controle morgen", date: today(), by: "Dr. Peeters" },
-  { id: 10, playerId: 10, status: "fit", note: "", date: today(), by: "Physical De Wolf" },
-  { id: 11, playerId: 11, status: "fit", note: "", date: today(), by: "Physical De Wolf" },
-  { id: 12, playerId: 12, status: "restricted", note: "Pols — geen contact oefeningen", date: today(), by: "Dr. Peeters" },
-  { id: 13, playerId: 13, status: "fit", note: "", date: today(), by: "Kine Janssen" },
-  { id: 14, playerId: 14, status: "fit", note: "", date: today(), by: "Kine Janssen" },
-  { id: 15, playerId: 15, status: "injured", note: "Stressfractuur voet — 4 weken rust", date: today(), by: "Dr. Peeters" },
-  { id: 16, playerId: 16, status: "fit", note: "", date: today(), by: "Physical De Wolf" },
-  { id: 17, playerId: 17, status: "fit", note: "", date: today(), by: "Physical De Wolf" },
-  { id: 18, playerId: 18, status: "fit-complaints", note: "Lichte vermoeidheid na lange reis", date: today(), by: "Kine Janssen" },
-  { id: 19, playerId: 19, status: "fit", note: "", date: today(), by: "Physical De Wolf" },
-  { id: 20, playerId: 20, status: "fit", note: "", date: today(), by: "Dr. Peeters" },
-  { id: 21, playerId: 21, status: "fit", note: "", date: today(), by: "Kine Janssen" },
-  { id: 22, playerId: 22, status: "fit", note: "", date: today(), by: "Physical De Wolf" },
+  { id: 1,  playerId: 1,  status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 2,  playerId: 2,  status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 3,  playerId: 3,  status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 4,  playerId: 4,  status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 5,  playerId: 5,  status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 6,  playerId: 6,  status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 7,  playerId: 7,  status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 8,  playerId: 8,  status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 9,  playerId: 9,  status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 10, playerId: 10, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 11, playerId: 11, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 12, playerId: 12, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 13, playerId: 13, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 14, playerId: 14, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 15, playerId: 15, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 16, playerId: 16, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 17, playerId: 17, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 18, playerId: 18, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 19, playerId: 19, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 20, playerId: 20, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 21, playerId: 21, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 22, playerId: 22, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 23, playerId: 23, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 24, playerId: 24, status: "fit", note: "", date: today(), by: "Medische staf" },
+  { id: 25, playerId: 25, status: "fit", note: "", date: today(), by: "Medische staf" },
 ];
 
-let medicalHistory = [
-  { playerId: 2, date: "2025-02-10", type: "Diagnose", description: "Enkelblessure links, graad 1 verstuiking", by: "Dr. Peeters" },
-  { playerId: 2, date: "2025-03-01", type: "Behandeling", description: "Echografie — bindweefsel herstel 80%", by: "Kine Janssen" },
-  { playerId: 7, date: "2025-01-20", type: "Diagnose", description: "Hamstring strain graad 2 rechts", by: "Dr. Peeters" },
-  { playerId: 7, date: "2025-01-22", type: "MRI", description: "Bevestiging graad 2, geen avulsie", by: "Dr. Peeters" },
-  { playerId: 15, date: "2025-02-28", type: "Diagnose", description: "Stressfractuur 2e middenvoetsbeentje rechts", by: "Dr. Peeters" },
-  { playerId: 15, date: "2025-03-01", type: "Radiologie", description: "X-ray bevestigd — 4 weken immobilisatie", by: "Dr. Peeters" },
-];
+let medicalHistory = [];
+let formLogs = [];
 
-let formLogs = [
-  { date: today(), type: "Arts", playerId: 2, by: "Dr. Peeters", note: "Enkelblessure gediagnosticeerd, MRI aangevraagd" },
-  { date: today(), type: "Kine", playerId: 3, by: "Kine Janssen", note: "Dagstatus fit met klachten ingevoerd" },
-  { date: today(), type: "Physical", playerId: 5, by: "Physical De Wolf", note: "Trainingsload beperkt, rugklachten" },
-];
+// ============================================================
+// STAFF CONTACTEN (per speler, alles optioneel)
+// ============================================================
+const staffContacts = {
+  1:  { doc: { name: "Efe Ozgumus", email: "efe.ozgumus@fenerbahce.org", phone: "+905375458720" }, manager: { email: "ahmet.kulduk@fenerbahce.org" } },
+  2:  { doc: { name: "Efe Ozgumus", email: "efe.ozgumus@fenerbahce.org", phone: "+905375458720" }, manager: { email: "ahmet.kulduk@fenerbahce.org" } },
+  4:  { tel: "905314258540", doc: { email: "fztdytbeyzagumus@gmail.com" } },
+  5:  { doc: { email: "dlc938@gmail.com" } },
+  7:  { kine: { email: "michiel@spormechelen.be" }, coach: { name: "Arvid Diels" } },
+  8:  { tel: "34620884966", doc: { email: "joanfuscoll@gmail.com" } },
+  9:  { tel: "79606996994" },
+  11: { doc: { name: "Deniz" } },
+  12: { kine: { email: "kine.tomwagemans@outlook.be", phone: "476543706" }, doc: { name: "Michel Vancabeke", email: "michelvancabeke@hotmail.com" }, manager: { name: "Kathleen Schuurmans", email: "kathleen.schuurmans@telenet.be" } },
+  13: { tel: "33675521484", doc: { email: "jdonzeaud33@gmail.com" } },
+  14: { coach: { email: "araski@araski.com" } },
+  15: { tel: "34620410826", doc: { email: "silvia.millanm@icloud.com" } },
+  16: { doc: { email: "eyalaizen21@gmail.com" } },
+  17: { kine: { email: "michiel@spormechelen.be" }, coach: { name: "Arvid Diels" } },
+  18: { doc: { email: "alexis28.delvaux@gmail.com" } },
+  19: { doc: { email: "brad.bunten@bsu.edu" } },
+  20: { kine: { email: "michiel@spormechelen.be" }, coach: { name: "Arvid Diels" } },
+  21: { kine: { email: "kine.tomwagemans@outlook.be", phone: "476543706" }, doc: { name: "Michel Vancabeke", email: "michelvancabeke@hotmail.com" }, manager: { name: "Kathleen Schuurmans", email: "kathleen.schuurmans@telenet.be" } },
+  22: { kine: { email: "kine.tomwagemans@outlook.be", phone: "476543706" }, doc: { name: "Michel Vancabeke", email: "michelvancabeke@hotmail.com" }, manager: { name: "Kathleen Schuurmans", email: "kathleen.schuurmans@telenet.be" } },
+  24: { kine: { name: "Niels", email: "nielsdebelder@hotmail.com" }, coach: { name: "Sven Van Camp" }, manager: { name: "Gerrit De Borger", email: "gerrit.de.borger@telenet.be" } },
+};
 
 let currentWeekOffset = 0;
 let activeFilter = { spelers: 'all', dag: 'all' };
@@ -1026,6 +1231,34 @@ function initials(name) {
   return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 }
 
+function renderStaffCard(playerId) {
+  const sc = staffContacts[playerId];
+  if (!sc) return '';
+  const defs = [
+    { key: 'tel',     label: 'Tel',      icon: '📞' },
+    { key: 'kine',    label: 'Kinesist', icon: '🏃' },
+    { key: 'doc',     label: 'Arts',     icon: '🩺' },
+    { key: 'coach',   label: 'Coach',    icon: '🏀' },
+    { key: 'manager', label: 'Manager',  icon: '👤' },
+  ];
+  let rows = '';
+  for (const { key, label, icon } of defs) {
+    if (!sc[key]) continue;
+    if (key === 'tel') {
+      rows += `<div class="info-row"><span class="info-label">${icon} Tel</span><span class="info-value">${sc.tel}</span></div>`;
+      continue;
+    }
+    const c = sc[key];
+    const parts = [
+      c.name  ? `<strong>${c.name}</strong>` : '',
+      c.email ? `<a href="mailto:${c.email}" style="color:var(--cats-navy);">${c.email}</a>` : '',
+      c.phone ? c.phone : '',
+    ].filter(Boolean);
+    rows += `<div class="info-row"><span class="info-label">${icon} ${label}</span><span class="info-value" style="text-align:right;font-size:12.5px;">${parts.join(' &middot; ')}</span></div>`;
+  }
+  return rows ? `<div class="card"><div class="card-title">Clubstaf contacten</div>${rows}</div>` : '';
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -1035,6 +1268,11 @@ function showToast(msg) {
 
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
 
 // ============================================================
 // NAVIGATION
@@ -1047,9 +1285,15 @@ const pageTitles = {
   medisch: 'Medisch rapport',
   forms: 'Formulieren',
   mail: 'Rapport mailen',
+  medcontacten: 'Medische contacten',
 };
 
 function showPage(name) {
+  // Sluit sidebar op mobiel na navigatie
+  if (window.innerWidth <= 768) {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
@@ -1061,6 +1305,7 @@ function showPage(name) {
   if (name === 'weekrapport') renderWeekrapport();
   if (name === 'medisch') renderMedisch();
   if (name === 'forms') renderForms();
+  if (name === 'medcontacten') renderMedischeContacten();
 }
 
 // ============================================================
@@ -1238,6 +1483,8 @@ function openPlayerDetail(id) {
       </div>
     </div>
 
+    ${renderStaffCard(p.id)}
+
     <div class="grid-2">
       <div class="card">
         <div class="card-title">Statusgeschiedenis</div>
@@ -1317,14 +1564,17 @@ function openUpdateModalForPlayer(id) {
   document.getElementById('updatePlayer').value = id;
 }
 
-function submitStatusUpdate() {
+async function submitStatusUpdate() {
   const playerId = parseInt(document.getElementById('updatePlayer').value);
   const status = document.getElementById('updateStatus').value;
   const note = document.getElementById('updateNote').value;
   const date = document.getElementById('updateDate').value;
   const by = document.getElementById('updateBy').value || 'Staf';
 
-  statusUpdates.push({ id: Date.now(), playerId, status, note, date, by });
+  const { data, error } = await db.from('status_updates').insert({ player_id: playerId, status, note, date, by }).select().single();
+  statusUpdates.push(data ? mapRow(data) : { id: Date.now(), playerId, status, note, date, by });
+  if (error) console.error('Supabase fout:', error.message);
+
   closeModal('updateModal');
   showToast('Status succesvol opgeslagen ✓');
   renderDagstatus();
@@ -1467,6 +1717,293 @@ function loadMedischRapport(id) {
 // ============================================================
 // FORMS
 // ============================================================
+// MEDISCHE CONTACTEN
+// ============================================================
+let medicalContactsData = [
+  { club: "Castors Braine",        players: "Marie Vervaet, René Denys, Alicia Courthiau",
+    physioName: "Tom Wagemans",     physioEmail: "kine.tomwagemans@outlook.be",      physioTel: "476543706",
+    docName: "Michel Vancabeke",    docEmail: "michelvancabeke@hotmail.com",          docTel: "",
+    managerName: "Kathleen Schuurmans", managerEmail: "kathleen.schuurmans@telenet.be", managerTel: "" },
+
+  { club: "Namur Capitale",        players: "Wivine Defosset",
+    physioName: "",                 physioEmail: "",                                  physioTel: "",
+    docName: "Alexis Delvaux",      docEmail: "alexis28.delvaux@gmail.com",           docTel: "",
+    managerName: "",                managerEmail: "",                                 managerTel: "" },
+
+  { club: "Kangoeroes Mechelen",   players: "Laure Resimont, Annie Kibedi, Laura Vilcinskas",
+    physioName: "Michiel",          physioEmail: "michiel@spormechelen.be",           physioTel: "",
+    docName: "",                    docEmail: "",                                     docTel: "",
+    managerName: "Arvid Diels",     managerEmail: "",                                 managerTel: "" },
+
+  { club: "Phantoms Boom",         players: "Habibatou Bah",
+    physioName: "Niels Debelder",   physioEmail: "nielsdebelder@hotmail.com",         physioTel: "",
+    docName: "",                    docEmail: "",                                     docTel: "",
+    managerName: "Sven Van Camp / Gerrit De Borger", managerEmail: "gerrit.de.borger@telenet.be", managerTel: "" },
+
+{ club: "Waregem",               players: "Ziggy Mortier, Reinild Coorevits",
+    physioName: "",                 physioEmail: "",                                  physioTel: "",
+    docName: "Frederic Claessens",  docEmail: "frederic.claessens1@gmail.com",        docTel: "0475511565",
+    managerName: "Frederic Claessens", managerEmail: "frederic.claessens1@gmail.com", managerTel: "0475511565" },
+
+  { club: "Fenerbahçe",            players: "Emma Meesseman, Julie Allemand",
+    physioName: "Efe Ozgumus",      physioEmail: "efe.ozgumus@fenerbahce.org",        physioTel: "+905375458720",
+    docName: "Ahmet Kulduk",        docEmail: "ahmet.kulduk@fenerbahce.org",          docTel: "",
+    managerName: "Ahmet Kulduk",    managerEmail: "ahmet.kulduk@fenerbahce.org",      managerTel: "" },
+
+  { club: "Roemenië",              players: "Maxuella Lisowa",
+    physioName: "",                 physioEmail: "",                                  physioTel: "",
+    docName: "",                    docEmail: "",                                     docTel: "",
+    managerName: "Coach Roemenië",  managerEmail: "araski@araski.com",                managerTel: "" },
+
+  { club: "Kursk",                 players: "Kyara Linskens",
+    physioName: "",                 physioEmail: "",                                  physioTel: "79606996994",
+    docName: "",                    docEmail: "",                                     docTel: "",
+    managerName: "",                managerEmail: "",                                 managerTel: "" },
+
+  { club: "Basket Landes",         players: "Becky Massey",
+    physioName: "",                 physioEmail: "",                                  physioTel: "",
+    docName: "Doc Basket Landes",   docEmail: "jdonzeaud33@gmail.com",               docTel: "33675521484",
+    managerName: "",                managerEmail: "",                                 managerTel: "" },
+
+  { club: "CBJairis",              players: "Billie Massey",
+    physioName: "",                 physioEmail: "",                                  physioTel: "",
+    docName: "Doc CBJairis",        docEmail: "dlc938@gmail.com",                    docTel: "",
+    managerName: "",                managerEmail: "",                                 managerTel: "" },
+
+  { club: "Joventut Badalona",     players: "Elise Ramette",
+    physioName: "",                 physioEmail: "",                                  physioTel: "",
+    docName: "Joan Fuscoll",        docEmail: "joanfuscoll@gmail.com",               docTel: "34620884966",
+    managerName: "",                managerEmail: "",                                 managerTel: "" },
+
+  { club: "Emlak Konut",           players: "Antonia Delaere",
+    physioName: "",                 physioEmail: "",                                  physioTel: "",
+    docName: "Beyza Gumus",         docEmail: "fztdytbeyzagumus@gmail.com",          docTel: "905314258540",
+    managerName: "",                managerEmail: "",                                 managerTel: "" },
+
+  { club: "BAXI Ferrol",           players: "Ine Joris",
+    physioName: "",                 physioEmail: "",                                  physioTel: "",
+    docName: "Silvia Millan",       docEmail: "silvia.millanm@icloud.com",           docTel: "34620410826",
+    managerName: "",                managerEmail: "",                                 managerTel: "" },
+
+  { club: "Mersin",                players: "Julie Vanloo",
+    physioName: "",                 physioEmail: "",                                  physioTel: "",
+    docName: "Deniz",               docEmail: "",                                     docTel: "",
+    managerName: "",                managerEmail: "",                                 managerTel: "" },
+
+  { club: "Kansas State University", players: "Nastja Claessens",
+    physioName: "",                 physioEmail: "",                                  physioTel: "",
+    docName: "",                    docEmail: "",                                     docTel: "",
+    managerName: "",                managerEmail: "",                                 managerTel: "" },
+
+  { club: "Maccabi Haifa",         players: "Bethy Mununga",
+    physioName: "",                 physioEmail: "",                                  physioTel: "",
+    docName: "Eyal Aizen",          docEmail: "eyalaizen21@gmail.com",               docTel: "",
+    managerName: "",                managerEmail: "",                                 managerTel: "" },
+
+  { club: "Ball State University", players: "Zhen Verburgt",
+    physioName: "",                 physioEmail: "",                                  physioTel: "",
+    docName: "Brad Bunten",         docEmail: "brad.bunten@bsu.edu",                 docTel: "",
+    managerName: "",                managerEmail: "",                                 managerTel: "" },
+];
+
+let mcDeleteMode = false;
+let currentMcTab = 'clubs';
+
+function switchMcTab(tab) {
+  currentMcTab = tab;
+  mcDeleteMode = false;
+  const crudBtns = document.getElementById('mcCrudButtons');
+  const deleteBar = document.getElementById('mcDeleteBar');
+  if (crudBtns) crudBtns.style.display = tab === 'clubs' ? '' : 'none';
+  if (deleteBar) deleteBar.style.display = 'none';
+  ['clubs', 'all'].forEach(t => {
+    const btn = document.getElementById('mcTab-' + t);
+    if (!btn) return;
+    btn.style.color = t === tab ? 'var(--cats-navy)' : 'var(--text-muted)';
+    btn.style.borderBottomColor = t === tab ? 'var(--cats-navy)' : 'transparent';
+    btn.style.fontWeight = t === tab ? '600' : '500';
+  });
+  renderMedischeContacten();
+}
+
+function toggleMcDeleteMode() {
+  mcDeleteMode = !mcDeleteMode;
+  const bar = document.getElementById('mcDeleteBar');
+  const btn = document.getElementById('mcDeleteModeBtn');
+  const addBtn = document.getElementById('mcAddBtn');
+  bar.style.display = mcDeleteMode ? 'flex' : 'none';
+  if (btn) btn.textContent = mcDeleteMode ? '✕ Annuleren' : 'Verwijderen';
+  if (addBtn) addBtn.style.display = mcDeleteMode ? 'none' : '';
+  renderMedischeContacten();
+}
+
+function updateMcDeleteCount() {
+  const n = document.querySelectorAll('.mc-delete-cb:checked').length;
+  const el = document.getElementById('mcDeleteCount');
+  if (el) el.textContent = `${n} rij${n === 1 ? '' : 'en'} geselecteerd`;
+}
+
+async function confirmMcDelete() {
+  const checked = [...document.querySelectorAll('.mc-delete-cb:checked')].map(cb => parseInt(cb.value));
+  if (!checked.length) { showToast('Geen rijen geselecteerd'); return; }
+  if (!confirm(`${checked.length} rij(en) definitief verwijderen?`)) return;
+  checked.sort((a, b) => b - a);
+  for (const idx of checked) {
+    const id = medicalContactsData[idx]._id;
+    if (id) await db.from('medical_contacts').delete().eq('id', id);
+    medicalContactsData.splice(idx, 1);
+  }
+  mcDeleteMode = false;
+  const bar = document.getElementById('mcDeleteBar');
+  const btn = document.getElementById('mcDeleteModeBtn');
+  const addBtn = document.getElementById('mcAddBtn');
+  if (bar) bar.style.display = 'none';
+  if (btn) btn.textContent = 'Verwijderen';
+  if (addBtn) addBtn.style.display = '';
+  showToast(`${checked.length} contact(en) verwijderd`);
+  renderMedischeContacten();
+}
+
+function renderMedischeContacten() {
+  if (currentMcTab === 'all') { renderAllContacten(); return; }
+
+  function cell(name, email, tel) {
+    const parts = [];
+    if (name)  parts.push(`<span style="font-weight:500;">${name}</span>`);
+    if (email) parts.push(`<a href="mailto:${email}" style="color:var(--cats-navy);font-size:12px;">${email}</a>`);
+    if (tel)   parts.push(`<span style="color:var(--text-muted);font-size:12px;">${tel}</span>`);
+    return parts.length ? parts.join('<br>') : '<span style="color:var(--border);">—</span>';
+  }
+
+  const rows = medicalContactsData.map((r, i) => `
+    <tr>
+      ${mcDeleteMode ? `<td style="width:36px;"><input type="checkbox" class="mc-delete-cb" value="${i}" onchange="updateMcDeleteCount()"></td>` : ''}
+      <td style="white-space:nowrap;font-weight:600;">${r.club}</td>
+      <td style="font-size:12.5px;">${r.players || '—'}</td>
+      <td>${cell(r.physioName, r.physioEmail, r.physioTel)}</td>
+      <td>${cell(r.docName, r.docEmail, r.docTel)}</td>
+      <td>${cell(r.managerName, r.managerEmail, r.managerTel)}</td>
+      ${!mcDeleteMode ? `<td style="white-space:nowrap;"><button class="btn btn-outline btn-sm" onclick="openMedicalContactModal(${i})">✏ Bewerk</button></td>` : ''}
+    </tr>`).join('');
+
+  document.getElementById('medischeContactenContent').innerHTML = `
+    <div class="card" style="overflow-x:auto;padding:0;">
+      <table style="min-width:960px;">
+        <thead>
+          <tr>
+            ${mcDeleteMode ? '<th style="width:36px;"></th>' : ''}
+            <th>Club</th><th>Speelster(s)</th><th>🏃 Kinesist</th><th>🩺 Arts</th><th>👤 Manager / Coach</th>
+            ${!mcDeleteMode ? '<th></th>' : ''}
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function renderAllContacten() {
+  function contactRow(role, icon, name, email, tel, club, players) {
+    if (!name && !email && !tel) return null;
+    const nameStr  = name  ? `<span style="font-weight:500;">${name}</span>` : '';
+    const emailStr = email ? `<a href="mailto:${email}" style="color:var(--cats-navy);font-size:12px;">${email}</a>` : '';
+    const telStr   = tel   ? `<span style="color:var(--text-muted);font-size:12px;">${tel}</span>`   : '';
+    const contact  = [nameStr, emailStr, telStr].filter(Boolean).join('<br>');
+    return `<tr>
+      <td style="white-space:nowrap;"><span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;padding:2px 7px;border-radius:4px;background:var(--bg);color:var(--text-muted);">${icon} ${role}</span></td>
+      <td>${contact}</td>
+      <td style="white-space:nowrap;font-weight:500;">${club}</td>
+      <td style="font-size:12.5px;color:var(--text-muted);">${players || '—'}</td>
+    </tr>`;
+  }
+
+  const rows = [];
+  medicalContactsData.forEach(r => {
+    const p = r.players || '—';
+    const physio   = contactRow('Kinesist',      '🏃', r.physioName,  r.physioEmail,  r.physioTel,  r.club, p);
+    const doc      = contactRow('Arts',          '🩺', r.docName,     r.docEmail,     r.docTel,     r.club, p);
+    const manager  = contactRow('Manager/Coach', '👤', r.managerName, r.managerEmail, r.managerTel, r.club, p);
+    if (physio)  rows.push(physio);
+    if (doc)     rows.push(doc);
+    if (manager) rows.push(manager);
+  });
+
+  document.getElementById('medischeContactenContent').innerHTML = rows.length ? `
+    <div class="card" style="overflow-x:auto;padding:0;">
+      <table style="min-width:760px;">
+        <thead>
+          <tr><th>Rol</th><th>Contact</th><th>Club</th><th>Speelster(s)</th></tr>
+        </thead>
+        <tbody>${rows.join('')}</tbody>
+      </table>
+    </div>` :
+    `<div class="card"><p style="color:var(--text-muted);text-align:center;padding:32px 0;">Geen contacten beschikbaar.</p></div>`;
+}
+
+function openMedicalContactModal(index) {
+  const isEdit = index !== undefined;
+  document.getElementById('medicalContactModalTitle').textContent = isEdit ? 'Contact bewerken' : 'Contact toevoegen';
+  document.getElementById('mc-edit-id').value = isEdit ? index : '';
+
+  const r = isEdit ? medicalContactsData[index] : {};
+  document.getElementById('mc-club').value          = r.club         || '';
+  document.getElementById('mc-physio-name').value   = r.physioName   || '';
+  document.getElementById('mc-physio-email').value  = r.physioEmail  || '';
+  document.getElementById('mc-physio-tel').value    = r.physioTel    || '';
+  document.getElementById('mc-doc-name').value      = r.docName      || '';
+  document.getElementById('mc-doc-email').value     = r.docEmail     || '';
+  document.getElementById('mc-doc-tel').value       = r.docTel       || '';
+  document.getElementById('mc-manager-name').value  = r.managerName  || '';
+  document.getElementById('mc-manager-email').value = r.managerEmail || '';
+  document.getElementById('mc-manager-tel').value   = r.managerTel   || '';
+
+  // Speelsters als checkboxes
+  const selected = (r.players || '').split(',').map(s => s.trim()).filter(Boolean);
+  const container = document.getElementById('mc-players-container');
+  container.innerHTML = players.map(p => `
+    <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;padding:3px 0;">
+      <input type="checkbox" value="${p.name}" ${selected.includes(p.name) ? 'checked' : ''} style="width:14px;height:14px;cursor:pointer;">
+      <span>${p.name}</span>
+    </label>`).join('');
+
+  openModal('medicalContactModal');
+}
+
+async function saveMedicalContact() {
+  const selected = [...document.querySelectorAll('#mc-players-container input:checked')].map(cb => cb.value);
+  const entry = {
+    club:         document.getElementById('mc-club').value.trim(),
+    players:      selected.join(', '),
+    physioName:   document.getElementById('mc-physio-name').value.trim(),
+    physioEmail:  document.getElementById('mc-physio-email').value.trim(),
+    physioTel:    document.getElementById('mc-physio-tel').value.trim(),
+    docName:      document.getElementById('mc-doc-name').value.trim(),
+    docEmail:     document.getElementById('mc-doc-email').value.trim(),
+    docTel:       document.getElementById('mc-doc-tel').value.trim(),
+    managerName:  document.getElementById('mc-manager-name').value.trim(),
+    managerEmail: document.getElementById('mc-manager-email').value.trim(),
+    managerTel:   document.getElementById('mc-manager-tel').value.trim(),
+  };
+  const dbRow = {
+    club: entry.club, players: entry.players,
+    physio_name: entry.physioName, physio_email: entry.physioEmail, physio_tel: entry.physioTel,
+    doc_name: entry.docName, doc_email: entry.docEmail, doc_tel: entry.docTel,
+    manager_name: entry.managerName, manager_email: entry.managerEmail, manager_tel: entry.managerTel,
+  };
+  const idxStr = document.getElementById('mc-edit-id').value;
+  if (idxStr !== '') {
+    const idx = parseInt(idxStr);
+    const existingId = medicalContactsData[idx]._id;
+    if (existingId) await db.from('medical_contacts').update(dbRow).eq('id', existingId);
+    medicalContactsData[idx] = { ...entry, _id: existingId };
+  } else {
+    const { data } = await db.from('medical_contacts').insert(dbRow).select().single();
+    medicalContactsData.push({ ...entry, _id: data?.id });
+  }
+  closeModal('medicalContactModal');
+  showToast('Contact opgeslagen ✓');
+  renderMedischeContacten();
+}
+
 function renderForms() {
   const tbody = document.getElementById('formLogsTable');
   tbody.innerHTML = formLogs.sort((a, b) => b.date.localeCompare(a.date)).map(f => {
@@ -1528,23 +2065,30 @@ function openFormModal(type) {
   openModal('staffFormModal');
 }
 
-function submitStaffForm(type) {
+async function submitStaffForm(type) {
   const playerId = parseInt(document.getElementById('sf-player').value);
   const date = document.getElementById('sf-date').value;
   const by = document.getElementById('sf-by').value || 'Staf';
   const note = document.getElementById('sf-notes') ? document.getElementById('sf-notes').value : '';
+  const formType = type === 'arts' ? 'Arts' : type === 'kine' ? 'Kine' : 'Physical';
 
-  formLogs.push({ date, type: type === 'arts' ? 'Arts' : type === 'kine' ? 'Kine' : 'Physical', playerId, by, note });
+  const { data: logData } = await db.from('form_logs').insert({ player_id: playerId, date, type: formType, by, note }).select().single();
+  formLogs.push(logData ? mapRow(logData) : { date, type: formType, playerId, by, note });
 
   if (type === 'kine' && document.getElementById('sf-status')) {
     const status = document.getElementById('sf-status').value;
-    statusUpdates.push({ id: Date.now(), playerId, status, note, date, by });
+    const { data: sData } = await db.from('status_updates').insert({ player_id: playerId, status, note, date, by }).select().single();
+    statusUpdates.push(sData ? mapRow(sData) : { id: Date.now(), playerId, status, note, date, by });
   }
 
   if (type === 'arts' && document.getElementById('sf-diagnose')) {
     const desc = document.getElementById('sf-diagnose').value;
-    if (desc) medicalHistory.push({ playerId, date, type: 'Diagnose', description: desc, by });
-    statusUpdates.push({ id: Date.now(), playerId, status: 'injured', note: desc, date, by });
+    if (desc) {
+      const { data: hData } = await db.from('medical_history').insert({ player_id: playerId, date, type: 'Diagnose', description: desc, by }).select().single();
+      medicalHistory.push(hData ? mapRow(hData) : { playerId, date, type: 'Diagnose', description: desc, by });
+      const { data: sData } = await db.from('status_updates').insert({ player_id: playerId, status: 'injured', note: desc, date, by }).select().single();
+      statusUpdates.push(sData ? mapRow(sData) : { id: Date.now(), playerId, status: 'injured', note: desc, date, by });
+    }
   }
 
   closeModal('staffFormModal');
@@ -1806,18 +2350,40 @@ function generateDagPDF() {
 // ============================================================
 // INIT
 // ============================================================
-function init() {
+async function init() {
   document.getElementById('topbarDate').textContent = formatDate(today());
   document.getElementById('dagstatusDate').textContent = formatDate(today());
 
-  // Pre-fill update modal player list
+  // Laad data uit Supabase
+  try {
+    const [{ data: pData }, { data: sData }, { data: hData }, { data: fData }, { data: mcData }] = await Promise.all([
+      db.from('players').select('*').order('number'),
+      db.from('status_updates').select('*'),
+      db.from('medical_history').select('*'),
+      db.from('form_logs').select('*'),
+      db.from('medical_contacts').select('*').order('id'),
+    ]);
+    if (pData?.length)  players        = pData;
+    if (sData?.length)  statusUpdates  = sData.map(mapRow);
+    if (hData?.length)  medicalHistory = hData.map(mapRow);
+    if (fData?.length)  formLogs       = fData.map(mapRow);
+    if (mcData?.length) medicalContactsData = mcData.map(r => ({
+      _id: r.id,
+      club: r.club || '', players: r.players || '',
+      physioName: r.physio_name || '', physioEmail: r.physio_email || '', physioTel: r.physio_tel || '',
+      docName: r.doc_name || '', docEmail: r.doc_email || '', docTel: r.doc_tel || '',
+      managerName: r.manager_name || '', managerEmail: r.manager_email || '', managerTel: r.manager_tel || '',
+    }));
+  } catch(e) {
+    console.warn('Supabase niet bereikbaar, werkt met lokale data:', e);
+  }
+
   const sel = document.getElementById('updatePlayer');
   sel.innerHTML = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
   document.getElementById('updateDate').value = today();
 
   renderHome();
 
-  // Close modals on overlay click
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
   });
@@ -1827,3 +2393,4 @@ init();
 </script>
 </body>
 </html>
+
