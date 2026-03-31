@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Belgian Cats — Inloggen</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #0B1F3A;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .login-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 40px 36px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .login-logo {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .login-logo .label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #C8922A;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .login-logo .title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #0B1F3A;
+  }
+
+  .login-logo .sub {
+    font-size: 13px;
+    color: #6B6560;
+    margin-top: 2px;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #1A1612;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #E2DDD5;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #1A1612;
+    background: #F8F5EF;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input:focus {
+    border-color: #C8922A;
+    background: #fff;
+  }
+
+  .btn-login {
+    width: 100%;
+    margin-top: 24px;
+    padding: 11px;
+    background: #0B1F3A;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-login:hover { background: #162d52; }
+  .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .error {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: #FDEAEA;
+    border: 1px solid #f5c6c6;
+    border-radius: 8px;
+    color: #B42C2C;
+    font-size: 13px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="login-logo">
+    <div class="label">Belgian Cats</div>
+    <div class="title">Medische Staf Portaal</div>
+    <div class="sub">Log in om verder te gaan</div>
+  </div>
+
+  <label for="email">E-mailadres</label>
+  <input type="email" id="email" placeholder="naam@belgianbasketball.be" autocomplete="email">
+
+  <label for="password">Wachtwoord</label>
+  <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+
+  <button class="btn-login" id="loginBtn" onclick="doLogin()">Inloggen</button>
+
+  <div class="error" id="error"></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://ycyvqoqgcjtcurliprmt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_pTB_5K8cbSMsYi1FZjwFbg_clCd05Fk';
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Al ingelogd? Direct naar dashboard
+db.auth.getSession().then(({ data }) => {
+  if (data.session) window.location.replace('index.html');
+});
+
+// Enter key triggert login
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+async function doLogin() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = document.getElementById('loginBtn');
+  const errorEl = document.getElementById('error');
+
+  errorEl.style.display = 'none';
+
+  if (!email || !password) {
+    showError('Vul je e-mailadres en wachtwoord in.');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Bezig met inloggen…';
+
+  const { error } = await db.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = 'Inloggen';
+    showError('Verkeerde inloggegevens. Probeer opnieuw.');
+    return;
+  }
+
+  window.location.replace('index.html');
+}
+
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+</script>
+</body>
+</html>
