@@ -606,7 +606,7 @@
   .back-btn:hover { color: var(--cats-navy); }
 </style>
 </head>
-<body>
+<body style="visibility:hidden">
 
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
@@ -647,7 +647,10 @@
       <span class="nav-icon">☎</span><span>Medische contacten</span>
     </div>
   </nav>
-  <div class="sidebar-footer">v1.0 · 2025</div>
+  <div class="sidebar-footer" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+    <span>v1.0 · 2025</span>
+    <button onclick="doLogout()" title="Uitloggen" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.4);font-size:16px;padding:2px 4px;line-height:1;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">⏻</button>
+  </div>
 </aside>
 
 <!-- MAIN -->
@@ -1101,6 +1104,27 @@ Medische staf Belgian Cats</textarea>
 const SUPABASE_URL = 'https://ycyvqoqgcjtcurliprmt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_pTB_5K8cbSMsYi1FZjwFbg_clCd05Fk';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// AUTH GUARD
+(async () => {
+  const { data } = await db.auth.getSession();
+  if (!data.session) {
+    window.location.replace('login.html');
+    return;
+  }
+  document.body.style.visibility = 'visible';
+})();
+
+db.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT' || !session) {
+    window.location.replace('login.html');
+  }
+});
+
+async function doLogout() {
+  await db.auth.signOut();
+}
+
 function mapRow(u) { return u.player_id !== undefined ? { ...u, playerId: u.player_id } : u; }
 
 // ============================================================
@@ -2393,4 +2417,5 @@ init();
 </script>
 </body>
 </html>
+
 
