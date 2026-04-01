@@ -50,7 +50,7 @@
   .sidebar {
     width: var(--sidebar-w);
     background: var(--cats-navy);
-    min-height: 100vh;
+    height: 100vh;
     position: fixed;
     top: 0; left: 0;
     display: flex;
@@ -88,7 +88,10 @@
   nav {
     padding: 16px 0;
     flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
   }
+  nav::-webkit-scrollbar { display: none; }
 
   .nav-section {
     font-size: 10px;
@@ -684,9 +687,15 @@
     <div class="nav-item" onclick="showPage('medisch')">
       <span class="nav-icon">✚</span><span>Medisch rapport</span>
     </div>
+    <div class="nav-item" onclick="showPage('rapporten')">
+      <span class="nav-icon">📄</span><span>PDF Rapporten</span>
+    </div>
     <div class="nav-section">Invoer</div>
-    <div class="nav-item" onclick="showPage('forms')">
-      <span class="nav-icon">✎</span><span>Formulieren</span>
+    <div class="nav-item" onclick="showPage('arts')">
+      <span class="nav-icon">🩺</span><span>Arts</span>
+    </div>
+    <div class="nav-item" onclick="showPage('kine')">
+      <span class="nav-icon">🏃</span><span>Kinesist</span>
     </div>
     <div class="nav-item" onclick="showPage('mail')">
       <span class="nav-icon">✉</span><span>Mail rapport</span>
@@ -696,9 +705,20 @@
       <span class="nav-icon">☎</span><span>Medische contacten</span>
     </div>
   </nav>
-  <div class="sidebar-footer" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-    <span>v1.0 · 2025</span>
-    <button onclick="doLogout()" title="Uitloggen" style="background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.4);font-size:16px;padding:2px 4px;line-height:1;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.4)'">⏻</button>
+  <div class="sidebar-footer">
+    <button id="sidebar-user-btn" onclick="toggleLogoutPopup()" style="width:100%;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:none;border-radius:8px;padding:8px 10px;cursor:pointer;text-align:left;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+      <div id="sidebar-user-avatar" style="width:32px;height:32px;border-radius:50%;background:var(--cats-gold);color:var(--cats-navy);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;"></div>
+      <div style="overflow:hidden;">
+        <div id="sidebar-user-email" style="font-size:11px;color:rgba(255,255,255,0.85);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;"></div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);">Mijn profiel</div>
+      </div>
+    </button>
+  </div>
+
+  <!-- Logout popup — fixed zodat sidebar het niet afknipt -->
+  <div id="sidebar-logout-popup" style="display:none;position:fixed;bottom:80px;left:12px;width:196px;background:#1a3254;border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:14px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+    <div id="sidebar-popup-email" style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:12px;word-break:break-all;"></div>
+    <button onclick="doLogout()" style="width:100%;padding:9px;background:#b42c2c;border:none;border-radius:6px;color:#fff;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">⏻ Uitloggen</button>
   </div>
 </aside>
 
@@ -916,46 +936,254 @@
     </div>
 
     <!-- ===== FORMS ===== -->
-    <div class="page" id="page-forms">
+    <!-- ===== ARTS ===== -->
+    <div class="page" id="page-arts">
       <div class="section-header">
-        <div class="section-title">Invoerformulieren</div>
+        <div class="section-title">🩺 Arts — Medische invoer</div>
+      </div>
+      <div class="grid-2" style="align-items:start;">
+        <div class="card">
+          <div class="card-title">Nieuwe invoer</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Speler</label>
+              <select id="arts-player" onchange="renderArtsHistory()">
+                <option value="">— Kies speler —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Datum</label>
+              <input type="date" id="arts-date">
+            </div>
+            <div class="form-group full">
+              <label>Ingevoerd door (arts)</label>
+              <input type="text" id="arts-by" placeholder="Naam arts">
+            </div>
+            <div class="form-group full">
+              <label>Intake — klinische bevindingen</label>
+              <textarea id="arts-intake" rows="3" placeholder="Anamnese, klachten, bevindingen bij onderzoek..."></textarea>
+            </div>
+          </div>
+
+          <div style="margin:14px 0 8px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);border-top:1px solid var(--border);padding-top:14px;">Blessure / Diagnose</div>
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Diagnose</label>
+              <input type="text" id="arts-diagnose" placeholder="Bijv. enkeldistorsie graad II">
+            </div>
+            <div class="form-group">
+              <label>Lichaamsdeel</label>
+              <select id="arts-part">
+                <option value="">— Geen —</option>
+                <option>Enkel</option><option>Knie</option><option>Hamstring</option>
+                <option>Quadriceps</option><option>Lies</option><option>Rug</option>
+                <option>Schouder</option><option>Pols</option><option>Voet</option>
+                <option>Hoofd / Hersenschudding</option><option>Andere</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Ernst</label>
+              <select id="arts-ernst">
+                <option value="">— Geen —</option>
+                <option>Graad 1 — licht</option>
+                <option>Graad 2 — matig</option>
+                <option>Graad 3 — zwaar</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>Beeldvorming</label>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+                <label style="font-weight:400;display:flex;align-items:center;gap:5px;margin:0;"><input type="checkbox" id="arts-img-xray"> X-ray</label>
+                <label style="font-weight:400;display:flex;align-items:center;gap:5px;margin:0;"><input type="checkbox" id="arts-img-echo"> Echografie</label>
+                <label style="font-weight:400;display:flex;align-items:center;gap:5px;margin:0;"><input type="checkbox" id="arts-img-mri"> MRI</label>
+                <label style="font-weight:400;display:flex;align-items:center;gap:5px;margin:0;"><input type="checkbox" id="arts-img-ct"> CT-scan</label>
+              </div>
+            </div>
+            <div class="form-group full">
+              <label>Extra info / opmerkingen</label>
+              <textarea id="arts-extra" rows="2" placeholder="Verdere toelichting, prognose, terugkeer..."></textarea>
+            </div>
+            <div class="form-group full">
+              <label>Medicatie</label>
+              <input type="text" id="arts-meds" placeholder="Medicatie + dosis (bijv. Ibuprofen 400mg 3x/dag)">
+            </div>
+            <div class="form-group">
+              <label>Status update</label>
+              <select id="arts-status">
+                <option value="">— Geen statuswijziging —</option>
+                <option value="fit">Fit</option>
+                <option value="fit-complaints">Fit met klachten</option>
+                <option value="restricted">Restricties</option>
+                <option value="injured">Geblesseerd</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="submitArtsForm()">Opslaan</button>
+            <button class="btn btn-outline" onclick="resetArtsForm()">Wissen</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" id="arts-history-card">
+            <div class="card-title">Medische voorgeschiedenis</div>
+            <div id="arts-history-content" style="color:var(--text-muted);font-size:13px;">Kies een speler om de voorgeschiedenis te zien.</div>
+          </div>
+        </div>
       </div>
 
-      <div class="grid-3" style="margin-bottom:20px;">
-        <div class="card" style="cursor:pointer;border:2px solid transparent;transition:border 0.15s;" onclick="openFormModal('arts')"
-          onmouseenter="this.style.borderColor='var(--cats-navy)'" onmouseleave="this.style.borderColor='transparent'">
-          <div style="font-size:28px;margin-bottom:10px;">🩺</div>
-          <div style="font-weight:600;margin-bottom:4px;">Arts</div>
-          <div style="font-size:12px;color:var(--text-muted);">Diagnose, medicatie en medische beslissingen</div>
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">Recente arts-invoer</div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr><th>Datum</th><th>Speler</th><th>Intake</th><th>Diagnose</th><th>Ernst</th><th>Status</th><th>Door</th></tr></thead>
+            <tbody id="artsLogsTable"></tbody>
+          </table>
         </div>
-        <div class="card" style="cursor:pointer;border:2px solid transparent;transition:border 0.15s;" onclick="openFormModal('kine')"
-          onmouseenter="this.style.borderColor='var(--cats-navy)'" onmouseleave="this.style.borderColor='transparent'">
-          <div style="font-size:28px;margin-bottom:10px;">🏃</div>
-          <div style="font-weight:600;margin-bottom:4px;">Kinesist</div>
-          <div style="font-size:12px;color:var(--text-muted);">Behandeling, revalidatie en dagstatus</div>
+      </div>
+    </div>
+
+    <!-- ===== KINE ===== -->
+    <div class="page" id="page-kine">
+      <div class="section-header">
+        <div class="section-title">🏃 Kinesist — Behandelinvoer</div>
+      </div>
+      <div class="grid-2" style="align-items:start;">
+        <div class="card">
+          <div class="card-title">Nieuwe invoer</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Speler</label>
+              <select id="kine-player">
+                <option value="">— Kies speler —</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Datum</label>
+              <input type="date" id="kine-date">
+            </div>
+            <div class="form-group full">
+              <label>Ingevoerd door (kinesist)</label>
+              <input type="text" id="kine-by" placeholder="Naam kinesist — wordt bijgehouden bij invoer">
+            </div>
+            <div class="form-group">
+              <label>Status vandaag</label>
+              <select id="kine-status">
+                <option value="fit">Fit</option>
+                <option value="fit-complaints">Fit met klachten</option>
+                <option value="restricted">Restricties</option>
+                <option value="injured">Geblesseerd</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Lichaamsdeel</label>
+              <select id="kine-part">
+                <option value="">— Geen —</option>
+                <option>Enkel</option><option>Knie</option><option>Hamstring</option>
+                <option>Quadriceps</option><option>Lies</option><option>Rug</option>
+                <option>Schouder</option><option>Pols</option><option>Voet</option>
+                <option>Hoofd</option><option>Andere</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label>Diagnose <span style="font-weight:400;font-size:11px;color:var(--text-muted);">(wordt opgeslagen met naam kinesist)</span></label>
+              <input type="text" id="kine-diagnose" placeholder="Klinische diagnose of werkhypothese">
+            </div>
+            <div class="form-group full">
+              <label>Behandeling vandaag</label>
+              <input type="text" id="kine-treatment" placeholder="Bijv. manuele therapie, tape, oefeningen...">
+            </div>
+            <div class="form-group full">
+              <label>Revalidatieplan / verwachte terugkeer</label>
+              <textarea id="kine-rehab" rows="2" placeholder="Plan, doelstellingen, verwachte terugkeer..."></textarea>
+            </div>
+            <div class="form-group full">
+              <label>Notitie</label>
+              <textarea id="kine-note" rows="2" placeholder="Bijkomende opmerkingen..."></textarea>
+            </div>
+          </div>
+          <div class="btn-row" style="margin-top:16px;">
+            <button class="btn btn-primary" onclick="submitKineForm()">Opslaan</button>
+            <button class="btn btn-outline" onclick="resetKineForm()">Wissen</button>
+          </div>
         </div>
-        <div class="card" style="cursor:pointer;border:2px solid transparent;transition:border 0.15s;" onclick="openFormModal('physical')"
-          onmouseenter="this.style.borderColor='var(--cats-navy)'" onmouseleave="this.style.borderColor='transparent'">
-          <div style="font-size:28px;margin-bottom:10px;">💪</div>
-          <div style="font-weight:600;margin-bottom:4px;">Physical trainer</div>
-          <div style="font-size:12px;color:var(--text-muted);">Belasting, load en training readiness</div>
+
+        <div class="card" id="kine-recent-card">
+          <div class="card-title">Recente kine-invoer</div>
+          <div id="kine-logs-list" style="color:var(--text-muted);font-size:13px;">Nog geen invoer beschikbaar.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PDF RAPPORTEN ===== -->
+    <div class="page" id="page-rapporten">
+      <div class="section-header"><div class="section-title">📄 PDF Rapporten</div></div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">Individueel spelerrapport</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Speler</label>
+            <select id="rapp-player"></select>
+          </div>
+          <div class="form-group full">
+            <label>Aangepaste notitie <span style="font-weight:400;font-size:11px;color:var(--text-muted);">(optioneel — verschijnt als extra sectie in het PDF)</span></label>
+            <textarea id="rapp-custom-note" rows="3" placeholder="Bijkomende info, opmerkingen of instructies voor dit rapport..."></textarea>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn btn-primary" onclick="generateCustomPlayerPDF()">📥 Download individueel rapport</button>
         </div>
       </div>
 
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">Periodeoverzicht — Alle spelers gerangschikt per positie</div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+          <label style="margin:0;font-size:13px;font-weight:500;white-space:nowrap;">Periode:</label>
+          <select id="rapp-saved-periods" onchange="loadSavedPeriod()" style="flex:1;min-width:180px;max-width:280px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--surface);">
+            <option value="">— Kies een periode —</option>
+          </select>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Spelers in rapport</label>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <button class="btn btn-outline btn-sm" onclick="rappSelectAll(true)">Alle selecteren</button>
+              <button class="btn btn-outline btn-sm" onclick="rappSelectAll(false)">Geen selecteren</button>
+            </div>
+            <div id="rapp-player-checkboxes" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--surface);"></div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn btn-primary" onclick="generatePeriodPDF()">📥 Download periodeoverzicht</button>
+        </div>
+      </div>
+
+      <!-- Periodes beheren -->
       <div class="card">
-        <div class="card-title">Recente invoer</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Datum</th>
-              <th>Type</th>
-              <th>Speler</th>
-              <th>Ingevoerd door</th>
-              <th>Notitie</th>
-            </tr>
-          </thead>
-          <tbody id="formLogsTable"></tbody>
-        </table>
+        <div class="card-title">Periodes beheren</div>
+        <div style="display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:120px;">
+            <label style="display:block;font-size:12px;font-weight:500;margin-bottom:4px;">Naam periode</label>
+            <input type="text" id="rapp-period-name" placeholder="bijv. WK13 2026" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;">
+          </div>
+          <div style="flex:1;min-width:120px;">
+            <label style="display:block;font-size:12px;font-weight:500;margin-bottom:4px;">Van</label>
+            <input type="date" id="rapp-from" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;">
+          </div>
+          <div style="flex:1;min-width:120px;">
+            <label style="display:block;font-size:12px;font-weight:500;margin-bottom:4px;">Tot</label>
+            <input type="date" id="rapp-to" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;">
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="savePeriod()" style="white-space:nowrap;padding:7px 14px;">💾 Opslaan</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">Opgeslagen periodes</div>
+        <div id="rapp-periods-list"><span style="color:var(--text-muted);font-size:13px;">Nog geen periodes opgeslagen.</span></div>
       </div>
     </div>
 
@@ -1243,11 +1471,32 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     return;
   }
   document.body.style.visibility = 'visible';
+  const email = data.session.user.email || '';
+  const initials2 = email.split('@')[0].slice(0,2).toUpperCase();
+  const emailEl  = document.getElementById('sidebar-user-email');
+  const avatarEl = document.getElementById('sidebar-user-avatar');
+  const popupEl  = document.getElementById('sidebar-popup-email');
+  if (emailEl)  emailEl.textContent  = email;
+  if (avatarEl) avatarEl.textContent = initials2;
+  if (popupEl)  popupEl.textContent  = email;
 })();
 
 db.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_OUT' || !session) {
     window.location.replace('login.html');
+  }
+});
+
+function toggleLogoutPopup() {
+  const popup = document.getElementById('sidebar-logout-popup');
+  popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+}
+
+document.addEventListener('click', e => {
+  const btn   = document.getElementById('sidebar-user-btn');
+  const popup = document.getElementById('sidebar-logout-popup');
+  if (popup && btn && !btn.contains(e.target) && !popup.contains(e.target)) {
+    popup.style.display = 'none';
   }
 });
 
@@ -1386,30 +1635,25 @@ function initials(name) {
 }
 
 function renderStaffCard(playerId) {
-  const sc = staffContacts[playerId];
-  if (!sc) return '';
-  const defs = [
-    { key: 'tel',     label: 'Tel',      icon: '📞' },
-    { key: 'kine',    label: 'Kinesist', icon: '🏃' },
-    { key: 'doc',     label: 'Arts',     icon: '🩺' },
-    { key: 'coach',   label: 'Coach',    icon: '🏀' },
-    { key: 'manager', label: 'Manager',  icon: '👤' },
-  ];
+  const p = getPlayerById(playerId);
+  if (!p) return '';
+  const mc = medicalContactsData.find(r =>
+    r.club && p.club && r.club.toLowerCase().trim() === p.club.toLowerCase().trim()
+  );
+  if (!mc) return '';
   let rows = '';
-  for (const { key, label, icon } of defs) {
-    if (!sc[key]) continue;
-    if (key === 'tel') {
-      rows += `<div class="info-row"><span class="info-label">${icon} Tel</span><span class="info-value">${sc.tel}</span></div>`;
-      continue;
-    }
-    const c = sc[key];
+  const row = (icon, label, name, email, tel) => {
+    if (!name && !email && !tel) return '';
     const parts = [
-      c.name  ? `<strong>${c.name}</strong>` : '',
-      c.email ? `<a href="mailto:${c.email}" style="color:var(--cats-navy);">${c.email}</a>` : '',
-      c.phone ? c.phone : '',
+      name  ? `<strong>${name}</strong>` : '',
+      email ? `<a href="mailto:${email}" style="color:var(--cats-navy);">${email}</a>` : '',
+      tel   ? tel : '',
     ].filter(Boolean);
-    rows += `<div class="info-row"><span class="info-label">${icon} ${label}</span><span class="info-value" style="text-align:right;font-size:12.5px;">${parts.join(' &middot; ')}</span></div>`;
-  }
+    return `<div class="info-row"><span class="info-label">${icon} ${label}</span><span class="info-value" style="text-align:right;font-size:12.5px;">${parts.join(' &middot; ')}</span></div>`;
+  };
+  rows += row('🏃', 'Kinesist', mc.physioName,   mc.physioEmail,   mc.physioTel);
+  rows += row('🩺', 'Arts',     mc.docName,       mc.docEmail,       mc.docTel);
+  rows += row('👤', 'Manager',  mc.managerName,   mc.managerEmail,   mc.managerTel);
   return rows ? `<div class="card"><div class="card-title">Clubstaf contacten</div>${rows}</div>` : '';
 }
 
@@ -1437,7 +1681,9 @@ const pageTitles = {
   dagstatus: 'Dagstatus',
   weekrapport: 'Weekrapport',
   medisch: 'Medisch rapport',
-  forms: 'Formulieren',
+  arts: 'Arts — Medische invoer',
+  kine: 'Kinesist — Behandelinvoer',
+  rapporten: 'PDF Rapporten',
   mail: 'Rapport mailen',
   medcontacten: 'Medische contacten',
 };
@@ -1458,7 +1704,9 @@ function showPage(name) {
   if (name === 'dagstatus') renderDagstatus();
   if (name === 'weekrapport') renderWeekrapport();
   if (name === 'medisch') renderMedisch();
-  if (name === 'forms') renderForms();
+  if (name === 'arts') renderArtsPage();
+  if (name === 'kine') renderKinePage();
+  if (name === 'rapporten') renderRapportenPage();
   if (name === 'medcontacten') renderMedischeContacten();
 }
 
@@ -2395,96 +2643,176 @@ async function saveMedicalContact() {
   renderMedischeContacten();
 }
 
-function renderForms() {
-  const tbody = document.getElementById('formLogsTable');
-  tbody.innerHTML = formLogs.sort((a, b) => b.date.localeCompare(a.date)).map(f => {
+// ============================================================
+// ARTS PAGE
+// ============================================================
+function renderArtsPage() {
+  const sel = document.getElementById('arts-player');
+  if (sel && sel.options.length <= 1) {
+    players.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id; o.textContent = p.name;
+      sel.appendChild(o);
+    });
+  }
+  const dateFld = document.getElementById('arts-date');
+  if (dateFld && !dateFld.value) dateFld.value = today();
+  renderArtsHistory();
+  renderArtsLogs();
+}
+
+function renderArtsHistory() {
+  const pid = parseInt(document.getElementById('arts-player')?.value);
+  const el = document.getElementById('arts-history-content');
+  if (!el) return;
+  if (!pid) { el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Kies een speler om de voorgeschiedenis te zien.</span>'; return; }
+  const hist = medicalHistory.filter(h => h.playerId === pid).sort((a,b) => b.date.localeCompare(a.date));
+  if (!hist.length) { el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Geen medische voorgeschiedenis beschikbaar.</span>'; return; }
+  el.innerHTML = hist.map(h => `
+    <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
+        <span style="font-weight:600;color:var(--cats-navy);">${h.type||'—'}</span>
+        <span style="color:var(--text-muted);font-size:12px;">${formatDate(h.date)}</span>
+      </div>
+      <div style="color:var(--text);">${h.description||'—'}</div>
+      ${h.by ? `<div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Door: ${h.by}</div>` : ''}
+    </div>`).join('');
+}
+
+function renderArtsLogs() {
+  const tbody = document.getElementById('artsLogsTable');
+  if (!tbody) return;
+  const logs = formLogs.filter(f => f.type === 'Arts').sort((a,b) => b.date.localeCompare(a.date));
+  if (!logs.length) { tbody.innerHTML = `<tr><td colspan="7" style="color:var(--text-muted);text-align:center;padding:20px;">Nog geen arts-invoer.</td></tr>`; return; }
+  tbody.innerHTML = logs.map(f => {
     const p = getPlayerById(f.playerId);
     return `<tr>
-      <td style="font-family:'DM Mono',monospace;font-size:12px;">${formatDate(f.date)}</td>
-      <td><span class="tag">${f.type}</span></td>
-      <td>${p ? p.name : '—'}</td>
-      <td style="font-size:13px;color:var(--text-muted);">${f.by}</td>
-      <td style="font-size:13px;color:var(--text-muted);">${f.note}</td>
+      <td style="font-size:12px;font-family:'DM Mono',monospace;">${formatDate(f.date)}</td>
+      <td style="font-weight:500;">${p ? p.name : '—'}</td>
+      <td style="font-size:12px;max-width:140px;">${f.note||'—'}</td>
+      <td style="font-size:12px;">${f.diagnose||'—'}</td>
+      <td style="font-size:12px;">${f.ernst||'—'}</td>
+      <td>${f.status ? statusBadge(f.status) : '—'}</td>
+      <td style="font-size:12px;color:var(--text-muted);">${f.by||'—'}</td>
     </tr>`;
   }).join('');
 }
 
-function openFormModal(type) {
-  const titles = { arts: 'Arts — Medisch formulier', kine: 'Kinesist — Behandelformulier', physical: 'Physical trainer — Trainingsformulier' };
-  document.getElementById('staffFormTitle').textContent = titles[type];
-  const playerOptions = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+async function submitArtsForm() {
+  const pid = parseInt(document.getElementById('arts-player').value);
+  if (!pid) { showToast('Kies een speler'); return; }
+  const date    = document.getElementById('arts-date').value || today();
+  const by      = document.getElementById('arts-by').value.trim() || 'Arts';
+  const intake  = document.getElementById('arts-intake').value.trim();
+  const diag    = document.getElementById('arts-diagnose').value.trim();
+  const ernst   = document.getElementById('arts-ernst').value;
+  const part    = document.getElementById('arts-part').value;
+  const extra   = document.getElementById('arts-extra').value.trim();
+  const meds    = document.getElementById('arts-meds').value.trim();
+  const status  = document.getElementById('arts-status').value;
+  const beeldv  = ['arts-img-xray','arts-img-echo','arts-img-mri','arts-img-ct']
+    .filter(id => document.getElementById(id)?.checked)
+    .map(id => ({ 'arts-img-xray':'X-ray','arts-img-echo':'Echografie','arts-img-mri':'MRI','arts-img-ct':'CT-scan' })[id])
+    .join(', ');
 
-  let formHTML = `<div class="form-grid">
-    <div class="form-group"><label>Speler</label><select id="sf-player">${playerOptions}</select></div>
-    <div class="form-group"><label>Datum</label><input type="date" id="sf-date" value="${today()}"></div>
-    <div class="form-group"><label>Ingevoerd door</label><input type="text" id="sf-by" placeholder="Naam"></div>`;
+  const note = [intake, diag ? `Diagnose: ${diag}` : '', part ? `Lichaamsdeel: ${part}` : '', beeldv ? `Beeldvorming: ${beeldv}` : '', extra, meds ? `Medicatie: ${meds}` : ''].filter(Boolean).join(' | ');
 
-  if (type === 'arts') {
-    formHTML += `
-    <div class="form-group"><label>Diagnose</label><input type="text" id="sf-diagnose" placeholder="Diagnose omschrijving"></div>
-    <div class="form-group"><label>Lichaamsdeel</label>
-      <select id="sf-part"><option>Enkel</option><option>Knie</option><option>Hamstring</option><option>Rug</option><option>Schouder</option><option>Pols</option><option>Voet</option><option>Hoofd</option><option>Andere</option></select>
-    </div>
-    <div class="form-group"><label>Ernst</label>
-      <select id="sf-ernst"><option>Graad 1</option><option>Graad 2</option><option>Graad 3</option><option>Niet van toepassing</option></select>
-    </div>
-    <div class="form-group full"><label>Medicatie</label><input type="text" id="sf-meds" placeholder="Medicatie + dosis"></div>
-    <div class="form-group full"><label>Opmerkingen</label><textarea id="sf-notes"></textarea></div>`;
-  } else if (type === 'kine') {
-    formHTML += `
-    <div class="form-group"><label>Status vandaag</label>
-      <select id="sf-status"><option value="fit">Fit</option><option value="fit-complaints">Fit met klachten</option><option value="restricted">Restricties</option><option value="injured">Geblesseerd</option></select>
-    </div>
-    <div class="form-group full"><label>Behandeling</label><input type="text" id="sf-treatment" placeholder="Behandeling omschrijving"></div>
-    <div class="form-group full"><label>Revalidatieplan</label><textarea id="sf-rehab" placeholder="Plan + verwachte terugkeer"></textarea></div>
-    <div class="form-group full"><label>Notitie</label><textarea id="sf-notes"></textarea></div>`;
-  } else {
-    formHTML += `
-    <div class="form-group"><label>Trainingsbelasting</label>
-      <select id="sf-load"><option>Normaal</option><option>Verminderd</option><option>Geen training</option><option>Individueel</option></select>
-    </div>
-    <div class="form-group"><label>Readiness score (1–10)</label><input type="number" id="sf-readiness" min="1" max="10" value="8"></div>
-    <div class="form-group full"><label>Notitie</label><textarea id="sf-notes"></textarea></div>`;
+  const { data: logData } = await db.from('form_logs').insert({ player_id: pid, date, type: 'Arts', by, note }).select().single();
+  formLogs.push(logData ? { ...mapRow(logData), diagnose: diag, ernst, status } : { date, type: 'Arts', playerId: pid, by, note, diagnose: diag, ernst, status });
+
+  if (diag) {
+    const desc = [diag, part ? `(${part})` : '', ernst ? `— ${ernst}` : ''].filter(Boolean).join(' ');
+    const { data: hData } = await db.from('medical_history').insert({ player_id: pid, date, type: 'Diagnose', description: desc, by }).select().single();
+    medicalHistory.push(hData ? mapRow(hData) : { playerId: pid, date, type: 'Diagnose', description: desc, by });
+  }
+  if (status) {
+    const { data: sData } = await db.from('status_updates').insert({ player_id: pid, status, note: diag||intake, date, by }).select().single();
+    statusUpdates.push(sData ? mapRow(sData) : { id: Date.now(), playerId: pid, status, note: diag||intake, date, by });
   }
 
-  formHTML += `</div><div class="btn-row">
-    <button class="btn btn-primary" onclick="submitStaffForm('${type}')">Opslaan</button>
-    <button class="btn btn-outline" onclick="closeModal('staffFormModal')">Annuleren</button>
-  </div>`;
-
-  document.getElementById('staffFormContent').innerHTML = formHTML;
-  openModal('staffFormModal');
+  showToast('Arts-invoer opgeslagen ✓');
+  resetArtsForm();
+  renderArtsLogs();
+  renderArtsHistory();
 }
 
-async function submitStaffForm(type) {
-  const playerId = parseInt(document.getElementById('sf-player').value);
-  const date = document.getElementById('sf-date').value;
-  const by = document.getElementById('sf-by').value || 'Staf';
-  const note = document.getElementById('sf-notes') ? document.getElementById('sf-notes').value : '';
-  const formType = type === 'arts' ? 'Arts' : type === 'kine' ? 'Kine' : 'Physical';
+function resetArtsForm() {
+  ['arts-intake','arts-diagnose','arts-extra','arts-meds','arts-by'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['arts-ernst','arts-part','arts-status'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['arts-img-xray','arts-img-echo','arts-img-mri','arts-img-ct'].forEach(id => { const el=document.getElementById(id); if(el) el.checked=false; });
+}
 
-  const { data: logData } = await db.from('form_logs').insert({ player_id: playerId, date, type: formType, by, note }).select().single();
-  formLogs.push(logData ? mapRow(logData) : { date, type: formType, playerId, by, note });
+// ============================================================
+// KINE PAGE
+// ============================================================
+function renderKinePage() {
+  const sel = document.getElementById('kine-player');
+  if (sel && sel.options.length <= 1) {
+    players.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id; o.textContent = p.name;
+      sel.appendChild(o);
+    });
+  }
+  const dateFld = document.getElementById('kine-date');
+  if (dateFld && !dateFld.value) dateFld.value = today();
+  renderKineLogs();
+}
 
-  if (type === 'kine' && document.getElementById('sf-status')) {
-    const status = document.getElementById('sf-status').value;
-    const { data: sData } = await db.from('status_updates').insert({ player_id: playerId, status, note, date, by }).select().single();
-    statusUpdates.push(sData ? mapRow(sData) : { id: Date.now(), playerId, status, note, date, by });
+function renderKineLogs() {
+  const el = document.getElementById('kine-logs-list');
+  if (!el) return;
+  const logs = formLogs.filter(f => f.type === 'Kine').sort((a,b) => b.date.localeCompare(a.date)).slice(0, 20);
+  if (!logs.length) { el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Nog geen kine-invoer beschikbaar.</span>'; return; }
+  el.innerHTML = logs.map(f => {
+    const p = getPlayerById(f.playerId);
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-weight:600;color:var(--cats-navy);">${p ? p.name : '—'}</span>
+        <span style="display:flex;gap:8px;align-items:center;">${f.status ? statusBadge(f.status) : ''}<span style="color:var(--text-muted);font-size:11px;">${formatDate(f.date)}</span></span>
+      </div>
+      ${f.diagnose ? `<div style="color:var(--text);margin-bottom:2px;">🔍 ${f.diagnose}</div>` : ''}
+      ${f.note ? `<div style="color:var(--text-muted);">${f.note}</div>` : ''}
+      <div style="color:var(--text-muted);font-size:11px;margin-top:3px;">Kinesist: ${f.by||'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+async function submitKineForm() {
+  const pid = parseInt(document.getElementById('kine-player').value);
+  if (!pid) { showToast('Kies een speler'); return; }
+  const date    = document.getElementById('kine-date').value || today();
+  const by      = document.getElementById('kine-by').value.trim() || 'Kinesist';
+  const status  = document.getElementById('kine-status').value;
+  const part    = document.getElementById('kine-part').value;
+  const diag    = document.getElementById('kine-diagnose').value.trim();
+  const treat   = document.getElementById('kine-treatment').value.trim();
+  const rehab   = document.getElementById('kine-rehab').value.trim();
+  const note    = document.getElementById('kine-note').value.trim();
+
+  const fullNote = [treat ? `Behandeling: ${treat}` : '', rehab ? `Revalidatie: ${rehab}` : '', note].filter(Boolean).join(' | ');
+
+  const { data: logData } = await db.from('form_logs').insert({ player_id: pid, date, type: 'Kine', by, note: fullNote }).select().single();
+  formLogs.push(logData ? { ...mapRow(logData), diagnose: diag, status } : { date, type: 'Kine', playerId: pid, by, note: fullNote, diagnose: diag, status });
+
+  const { data: sData } = await db.from('status_updates').insert({ player_id: pid, status, note: diag||fullNote, date, by }).select().single();
+  statusUpdates.push(sData ? mapRow(sData) : { id: Date.now(), playerId: pid, status, note: diag||fullNote, date, by });
+
+  if (diag) {
+    const desc = [`Kine (${by})`, diag, part ? `(${part})` : ''].filter(Boolean).join(': ');
+    const { data: hData } = await db.from('medical_history').insert({ player_id: pid, date, type: 'Kine-diagnose', description: desc, by }).select().single();
+    medicalHistory.push(hData ? mapRow(hData) : { playerId: pid, date, type: 'Kine-diagnose', description: desc, by });
   }
 
-  if (type === 'arts' && document.getElementById('sf-diagnose')) {
-    const desc = document.getElementById('sf-diagnose').value;
-    if (desc) {
-      const { data: hData } = await db.from('medical_history').insert({ player_id: playerId, date, type: 'Diagnose', description: desc, by }).select().single();
-      medicalHistory.push(hData ? mapRow(hData) : { playerId, date, type: 'Diagnose', description: desc, by });
-      const { data: sData } = await db.from('status_updates').insert({ player_id: playerId, status: 'injured', note: desc, date, by }).select().single();
-      statusUpdates.push(sData ? mapRow(sData) : { id: Date.now(), playerId, status: 'injured', note: desc, date, by });
-    }
-  }
+  showToast('Kine-invoer opgeslagen ✓');
+  resetKineForm();
+  renderKineLogs();
+}
 
-  closeModal('staffFormModal');
-  showToast('Formulier opgeslagen ✓');
-  renderForms();
+function resetKineForm() {
+  ['kine-diagnose','kine-treatment','kine-rehab','kine-note','kine-by'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  const p = document.getElementById('kine-part'); if(p) p.value='';
+  const s = document.getElementById('kine-status'); if(s) s.value='fit';
 }
 
 // ============================================================
@@ -2516,7 +2844,7 @@ function sendMailReport() {
 // ============================================================
 // PDF GENERATION
 // ============================================================
-async function generatePlayerPDF(playerId) {
+async function generatePlayerPDF(playerId, customNote = '') {
   const { jsPDF } = window.jspdf;
   const p          = getPlayerById(playerId);
   const hist       = medicalHistory.filter(h => h.playerId === playerId).sort((a,b) => b.date.localeCompare(a.date));
@@ -2654,6 +2982,20 @@ async function generatePlayerPDF(playerId) {
   ];
   dear.forEach(line => { doc.text(line, M, y); y += line === '' ? 2 : 4.8; });
   y += 5;
+
+  // ── CUSTOM NOTE (optioneel) ────────────────────────────────
+  if (customNote) {
+    guard(20);
+    fc(...NAVY); doc.rect(M, y, CW, 9.5, 'F');
+    fc(...GOLD);  doc.rect(M, y+9.5, CW, 0.7, 'F');
+    tc(...WHITE); doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    doc.text('ADDITIONAL NOTE', W/2, y+6.5, {align:'center'});
+    y += 14;
+    tc(...TEXT); doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    const noteLines = doc.splitTextToSize(customNote, CW);
+    doc.text(noteLines, M, y);
+    y += noteLines.length * 4.8 + 8;
+  }
 
   // ── MEDICAL CHECK-UP / INTAKE ─────────────────────────────
   const intakeItems = [];
@@ -2794,6 +3136,286 @@ async function generatePlayerPDF(playerId) {
 
   doc.save(`MedicalReport_${p.name.replace(/\s/g,'_')}_${today()}.pdf`);
   showToast(`PDF gegenereerd voor ${p.name} ✓`);
+}
+
+// ============================================================
+// RAPPORTEN PAGE
+// ============================================================
+function posOrder(pos) {
+  return ({ 'PG':1,'SG':2,'G':3,'G/F':4,'SF':5,'F':6,'F/C':7,'PF':8,'C':9 })[pos] || 10;
+}
+
+function renderRapportenPage() {
+  const sel = document.getElementById('rapp-player');
+  if (sel && sel.options.length === 0) {
+    players.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; sel.appendChild(o); });
+  }
+  const container = document.getElementById('rapp-player-checkboxes');
+  if (container && container.children.length === 0) {
+    const sorted = [...players].sort((a,b) => posOrder(a.pos) - posOrder(b.pos));
+    container.innerHTML = sorted.map(p => `
+      <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;padding:3px 0;">
+        <input type="checkbox" class="rapp-player-cb" value="${p.id}" checked style="width:14px;height:14px;">
+        <span>${p.name} <span style="color:var(--text-muted);font-size:11px;">(${p.pos})</span></span>
+      </label>`).join('');
+  }
+  const from = document.getElementById('rapp-from');
+  const to   = document.getElementById('rapp-to');
+  if (from && !from.value) { const d=new Date(); d.setDate(d.getDate()-7); from.value=d.toISOString().split('T')[0]; }
+  if (to   && !to.value)   to.value = today();
+  renderSavedPeriodsDropdown();
+  renderSavedPeriodsList();
+}
+
+function rappSelectAll(checked) {
+  document.querySelectorAll('.rapp-player-cb').forEach(cb => cb.checked = checked);
+}
+
+function getSavedPeriods() {
+  try { return JSON.parse(localStorage.getItem('bc_periods') || '[]'); } catch { return []; }
+}
+
+function renderSavedPeriodsDropdown() {
+  const sel = document.getElementById('rapp-saved-periods');
+  if (!sel) return;
+  const periods = getSavedPeriods();
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Kies een periode —</option>' +
+    periods.map((p, i) => `<option value="${i}" ${current == i ? 'selected' : ''}>${p.name}  (${formatDate(p.from)} — ${formatDate(p.to)})</option>`).join('');
+}
+
+function renderSavedPeriodsList() {
+  const el = document.getElementById('rapp-periods-list');
+  if (!el) return;
+  const periods = getSavedPeriods();
+  if (!periods.length) { el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Nog geen periodes opgeslagen.</span>'; return; }
+  el.innerHTML = periods.map((p, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <span style="font-weight:600;font-size:13px;">${p.name}</span>
+        <span style="color:var(--text-muted);font-size:12px;margin-left:10px;">${formatDate(p.from)} — ${formatDate(p.to)}</span>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="editPeriodByIndex(${i})" style="padding:4px 10px;">✏ Bewerken</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePeriodByIndex(${i})" style="padding:4px 10px;">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function savePeriod() {
+  const name = document.getElementById('rapp-period-name').value.trim();
+  const from = document.getElementById('rapp-from').value;
+  const to   = document.getElementById('rapp-to').value;
+  if (!name)  { showToast('Geef een naam aan de periode'); return; }
+  if (!from || !to) { showToast('Kies een van- en tot-datum'); return; }
+  if (from > to)    { showToast('Van-datum moet voor tot-datum liggen'); return; }
+  const periods = getSavedPeriods();
+  const existing = periods.findIndex(p => p.name === name);
+  if (existing >= 0) periods[existing] = { name, from, to };
+  else periods.push({ name, from, to });
+  localStorage.setItem('bc_periods', JSON.stringify(periods));
+  renderSavedPeriodsDropdown();
+  renderSavedPeriodsList();
+  showToast(`Periode "${name}" opgeslagen ✓`);
+}
+
+function loadSavedPeriod() {
+  const sel = document.getElementById('rapp-saved-periods');
+  const idx = sel.value;
+  if (idx === '') return;
+  const period = getSavedPeriods()[parseInt(idx)];
+  if (!period) return;
+  document.getElementById('rapp-from').value = period.from;
+  document.getElementById('rapp-to').value   = period.to;
+  document.getElementById('rapp-period-name').value = period.name;
+}
+
+function deleteSavedPeriod() { /* legacy, niet meer gebruikt */ }
+
+function editPeriodByIndex(idx) {
+  const period = getSavedPeriods()[idx];
+  if (!period) return;
+  document.getElementById('rapp-period-name').value = period.name;
+  document.getElementById('rapp-from').value = period.from;
+  document.getElementById('rapp-to').value   = period.to;
+  document.getElementById('rapp-period-name').focus();
+  showToast(`Periode "${period.name}" geladen — pas aan en sla opnieuw op`);
+}
+
+function deletePeriodByIndex(idx) {
+  const periods = getSavedPeriods();
+  const name = periods[idx]?.name;
+  if (!confirm(`Periode "${name}" verwijderen?`)) return;
+  periods.splice(idx, 1);
+  localStorage.setItem('bc_periods', JSON.stringify(periods));
+  document.getElementById('rapp-saved-periods').value = '';
+  renderSavedPeriodsDropdown();
+  renderSavedPeriodsList();
+  showToast('Periode verwijderd');
+}
+
+async function generateCustomPlayerPDF() {
+  const pid = parseInt(document.getElementById('rapp-player').value);
+  if (!pid) { showToast('Kies een speler'); return; }
+  const customNote = document.getElementById('rapp-custom-note').value.trim();
+  await generatePlayerPDF(pid, customNote);
+}
+
+function getDatesInRange(from, to) {
+  const dates = [], cur = new Date(from+'T00:00:00'), end = new Date(to+'T00:00:00');
+  while (cur <= end) { dates.push(cur.toISOString().split('T')[0]); cur.setDate(cur.getDate()+1); }
+  return dates;
+}
+
+function getLastStatusOnOrBefore(playerId, date) {
+  return statusUpdates.filter(u => u.playerId === playerId && u.date <= date)
+    .sort((a,b) => b.date.localeCompare(a.date))[0] || null;
+}
+
+async function generatePeriodPDF() {
+  const fromDate   = document.getElementById('rapp-from').value;
+  const toDate     = document.getElementById('rapp-to').value;
+  const savedIdx   = document.getElementById('rapp-saved-periods').value;
+  const savedName  = savedIdx !== '' ? (getSavedPeriods()[parseInt(savedIdx)]?.name || '') : '';
+  const periodName = document.getElementById('rapp-period-name').value.trim() || savedName;
+  if (!fromDate || !toDate) { showToast('Kies een periode'); return; }
+  if (fromDate > toDate)    { showToast('Van-datum moet voor tot-datum liggen'); return; }
+  const selectedIds = [...document.querySelectorAll('.rapp-player-cb:checked')].map(cb => parseInt(cb.value));
+  if (!selectedIds.length)  { showToast('Selecteer minstens één speler'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W=210, M=15, CW=W-2*M;
+  const NAVY=[11,31,58], GOLD=[200,146,42], WHITE=[255,255,255], TEXT=[26,22,18], MUTED=[107,101,96], LGRAY=[240,237,232];
+  let y=0;
+  const fc=(...c)=>doc.setFillColor(...c), tc=(...c)=>doc.setTextColor(...c), dc=(...c)=>doc.setDrawColor(...c);
+  function newPage(){ doc.addPage(); y=15; }
+  function guard(h=15){ if(y+h>278) newPage(); }
+  function sectionBar(title){ guard(16); fc(...NAVY); doc.rect(M,y,CW,9.5,'F'); fc(...GOLD); doc.rect(M,y+9.5,CW,0.7,'F'); tc(...WHITE); doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.text(title,W/2,y+6.5,{align:'center'}); y+=14; }
+
+  async function urlToDataUrl(src) {
+    try { const img=new Image(); img.crossOrigin='anonymous'; await new Promise(r=>{img.onload=r;img.onerror=r;img.src=src;}); if(!img.naturalWidth) return null; const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; c.getContext('2d').drawImage(img,0,0); return c.toDataURL('image/png'); } catch { return null; }
+  }
+  const logoDataUrl = await urlToDataUrl('belgian-cats-report-logo.jpg');
+  const selectedPlayers = players.filter(p=>selectedIds.includes(p.id)).sort((a,b)=>posOrder(a.pos)-posOrder(b.pos));
+  const photos = {};
+  await Promise.all(selectedPlayers.map(async p=>{ if(p.photo_url) photos[p.id]=await urlToDataUrl(p.photo_url.split('?')[0]); }));
+  const dates = getDatesInRange(fromDate, toDate);
+  const dayNames = ['zo','ma','di','wo','do','vr','za'];
+  const sColors = {'fit':[45,122,58],'fit-complaints':[91,138,47],'restricted':[199,106,0],'injured':[180,44,44]};
+  const sLabels = {'fit':'Fit','fit-complaints':'Fit m. klachten','restricted':'Restricties','injured':'Geblesseerd'};
+
+  // ── COVER PAGE ────────────────────────────────────────────
+  fc(...NAVY); doc.rect(0,0,W,297,'F');
+  fc(20,20,20); doc.rect(0,0,W/3,8,'F'); fc(...GOLD); doc.rect(W/3,0,W/3,8,'F'); fc(185,15,15); doc.rect(W*2/3,0,W/3,8,'F');
+  if (logoDataUrl) doc.addImage(logoDataUrl,'JPEG',W/2-35,40,70,39);
+  else { tc(...GOLD); doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.text('BELGIAN CATS',W/2,65,{align:'center'}); }
+  tc(...WHITE); doc.setFont('helvetica','bold'); doc.setFontSize(20);
+  doc.text('PERIOD MEDICAL REPORT', W/2,105,{align:'center'});
+  fc(...GOLD); doc.rect(M,109,CW,0.8,'F');
+  tc(...GOLD); doc.setFont('helvetica','normal'); doc.setFontSize(11);
+  doc.text(periodName ? `${periodName}  ·  ${formatDate(fromDate)} — ${formatDate(toDate)}` : `${formatDate(fromDate)} — ${formatDate(toDate)}`, W/2,120,{align:'center'});
+  tc(180,160,100); doc.setFontSize(8.5); doc.setFont('helvetica','bold');
+  doc.text(`${selectedPlayers.length} spelers`, W/2,132,{align:'center'});
+  tc(160,140,80); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+  let py=142;
+  for(const p of selectedPlayers){ if(py>268) break; doc.text(`${p.name}  ·  ${p.pos}  ·  ${p.club||'—'}`,W/2,py,{align:'center'}); py+=6; }
+  fc(...GOLD); doc.rect(0,289,W,0.8,'F');
+  tc(100,80,30); doc.setFontSize(7); doc.text('BELGIAN CATS — Medical Staff  ·  Confidential',W/2,294,{align:'center'});
+
+  // ── PLAYER SECTIONS ───────────────────────────────────────
+  for(let pi=0; pi<selectedPlayers.length; pi++){
+    const p = selectedPlayers[pi];
+    doc.addPage(); y=0;
+    const photoDataUrl = photos[p.id]||null;
+    const hH=66, fW=5, fX=W-fW;
+
+    // Header
+    fc(...WHITE); doc.rect(0,0,W,hH,'F');
+    fc(20,20,20); doc.rect(fX,0,fW,hH/3,'F'); fc(...GOLD); doc.rect(fX,hH/3,fW,hH/3,'F'); fc(185,15,15); doc.rect(fX,hH*2/3,fW,hH/3,'F');
+    const lW=54,lH=30;
+    if(logoDataUrl) doc.addImage(logoDataUrl,'JPEG',M,(hH-lH)/2,lW,lH);
+    const phS=44,phX=fX-4-phS,phY=(hH-phS)/2;
+    if(photoDataUrl) doc.addImage(photoDataUrl,'JPEG',phX,phY,phS,phS);
+    else { fc(220,216,210); doc.rect(phX,phY,phS,phS,'F'); tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.text(initials(p.name),phX+phS/2,phY+phS/2+3.5,{align:'center'}); }
+    const ix=M+lW+10, iW=phX-ix-4;
+    tc(...GOLD); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+    doc.text(`PERIOD REPORT  ·  ${pi+1} / ${selectedPlayers.length}`,ix,11);
+    fc(...GOLD); doc.rect(ix,13,iW,0.4,'F');
+    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.text(p.name,ix,24);
+    fc(...GOLD); doc.rect(ix,26.5,Math.min(iW,doc.getTextWidth(p.name)+2),0.6,'F');
+    tc(60,60,60); doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.text(p.club||'—',ix,36);
+    tc(...MUTED); doc.setFontSize(8.5); doc.text(`${p.pos||'—'}  ·  #${p.number||'—'}`,ix,44);
+    tc(...MUTED); doc.setFontSize(7.5); doc.text(periodName ? `${periodName}  ·  ${formatDate(fromDate)} — ${formatDate(toDate)}` : `Periode: ${formatDate(fromDate)} — ${formatDate(toDate)}`,ix,59);
+    fc(...GOLD); doc.rect(0,hH,W,1.2,'F');
+    y = hH+1.2+8;
+
+    // Day by day
+    sectionBar('DAY BY DAY STATUS');
+    const dc1=M,dw1=20,dc2=M+dw1+2,dw2=12,dc3=M+dw1+dw2+4,dw3=34,dc4=M+dw1+dw2+dw3+6,dw4=CW-dw1-dw2-dw3-8;
+    fc(230,226,220); doc.rect(M,y-3.5,CW,7.5,'F');
+    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(8);
+    doc.text('Datum',dc1+1,y+0.2); doc.text('Dag',dc2+1,y+0.2); doc.text('Status',dc3+1,y+0.2); doc.text('Notitie',dc4+1,y+0.2);
+    dc(200,195,188); doc.setLineWidth(0.3); doc.line(M,y+4,W-M,y+4);
+    y+=8;
+    dates.forEach((date,di)=>{
+      guard(6.5);
+      const su = getLastStatusOnOrBefore(p.id,date);
+      const exact = statusUpdates.find(u=>u.playerId===p.id&&u.date===date);
+      if(di%2===0){ fc(248,246,242); doc.rect(M,y-3,CW,6.5,'F'); }
+      const dn = dayNames[new Date(date+'T00:00:00').getDay()];
+      tc(...TEXT); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.text(formatDate(date),dc1+1,y+0.5);
+      tc(...MUTED); doc.text(dn,dc2+1,y+0.5);
+      if(su){ const col=sColors[su.status]||MUTED; tc(...col); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.text(sLabels[su.status]||su.status,dc3+1,y+0.5); }
+      else { tc(200,195,188); doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.text('—',dc3+1,y+0.5); }
+      if(exact?.note){ tc(...TEXT); doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.text(doc.splitTextToSize(exact.note,dw4-2)[0],dc4+1,y+0.5); }
+      y+=6.5;
+    });
+    y+=6;
+
+    // Medical notes in period
+    const pArts = formLogs.filter(f=>f.playerId===p.id&&f.type==='Arts'&&f.date>=fromDate&&f.date<=toDate);
+    const pKine = formLogs.filter(f=>f.playerId===p.id&&f.type==='Kine'&&f.date>=fromDate&&f.date<=toDate);
+    const pHist = medicalHistory.filter(h=>h.playerId===p.id&&h.date>=fromDate&&h.date<=toDate);
+    const allNotes = [...pArts,...pKine,...pHist].sort((a,b)=>a.date.localeCompare(b.date));
+    if(allNotes.length){
+      sectionBar('MEDICAL NOTES — PERIODE');
+      const nc1=M,nw1=22,nc2=M+nw1+2,nw2=16,nc3=M+nw1+nw2+4,nw3=CW-nw1-nw2-40,nc4=M+nw1+nw2+nw3+6;
+      fc(230,226,220); doc.rect(M,y-3.5,CW,7.5,'F');
+      tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(8);
+      doc.text('Datum',nc1+1,y+0.2); doc.text('Type',nc2+1,y+0.2); doc.text('Notitie / Diagnose',nc3+1,y+0.2); doc.text('Door',nc4+1,y+0.2);
+      dc(200,195,188); doc.setLineWidth(0.3); doc.line(M,y+4,W-M,y+4); y+=8;
+      allNotes.forEach((item,ii)=>{
+        const text=item.note||item.description||'—';
+        const lines=doc.splitTextToSize(text,nw3-2);
+        const rh=Math.max(lines.length*4.5+3,6.5);
+        guard(rh);
+        if(ii%2===0){ fc(248,246,242); doc.rect(M,y-2.5,CW,rh,'F'); }
+        tc(...MUTED); doc.setFont('helvetica','normal'); doc.setFontSize(8);
+        doc.text(formatDate(item.date),nc1+1,y+0.5);
+        const typeLabel=item.type==='Arts'?'🩺 Arts':item.type==='Kine'?'🏃 Kine':'Medisch';
+        tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.text(item.type||'—',nc2+1,y+0.5);
+        tc(...TEXT); doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.text(lines,nc3+1,y+0.5);
+        tc(...MUTED); doc.text(item.by||'—',nc4+1,y+0.5);
+        y+=rh;
+      });
+      y+=4;
+    }
+  }
+
+  // Footer on all pages except cover
+  const total=doc.internal.getNumberOfPages();
+  for(let i=2;i<=total;i++){
+    doc.setPage(i);
+    fc(...GOLD); doc.rect(0,283,W,0.8,'F');
+    fc(...LGRAY); doc.rect(0,283.8,W,13.2,'F');
+    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.text('BELGIAN CATS',M,290);
+    tc(...MUTED); doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.text(`Medical Staff  ·  ${periodName ? periodName+' · ' : ''}${formatDate(fromDate)} — ${formatDate(toDate)}  ·  Confidential`,M+27,290);
+    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.text(`${i-1} / ${total-1}`,W-M,290,{align:'right'});
+  }
+
+  doc.save(`PeriodReport_${fromDate}_${toDate}.pdf`);
+  showToast('Periodeoverzicht gegenereerd ✓');
 }
 
 function generateWeekPDF() {
@@ -2947,5 +3569,3 @@ init();
 </script>
 </body>
 </html>
-
-
