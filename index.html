@@ -7,6 +7,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
@@ -57,7 +59,7 @@
   }
 
   .sidebar-logo {
-    padding: 24px 20px 20px;
+    padding: 0;
     border-bottom: 1px solid rgba(255,255,255,0.08);
   }
 
@@ -341,6 +343,46 @@
     color: var(--cats-gold-light);
     flex-shrink: 0;
   }
+  .player-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .photo-upload-area {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+  .photo-upload-area:hover { border-color: var(--cats-gold); }
+  .photo-upload-area input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .photo-upload-preview {
+    width: 72px; height: 72px; border-radius: 50%; object-fit: cover;
+    margin: 0 auto 8px; display: block;
+  }
+  .photo-upload-label { font-size: 12px; color: var(--text-muted); }
+  .cropper-wrap {
+    background: #111;
+    border-radius: 8px;
+    overflow: hidden;
+    max-height: 260px;
+    margin: 10px 0 6px;
+    display: none;
+  }
+  .cropper-wrap img { display: block; max-width: 100%; }
+  .crop-preview-circle {
+    width: 72px; height: 72px; border-radius: 50%;
+    overflow: hidden; margin: 0 auto 6px;
+    border: 2px solid var(--border);
+    display: none;
+  }
+  .crop-preview-circle img { width: 100%; height: 100%; object-fit: cover; }
 
   .player-info h2 { font-size: 20px; font-weight: 600; }
   .player-info p { font-size: 13px; color: var(--text-muted); }
@@ -487,7 +529,9 @@
   /* ── 900px: tablet landscape ── */
   @media (max-width: 900px) {
     .sidebar { width: 60px; }
-    .sidebar-logo, .nav-section, .nav-item span, .logo-sub, .sidebar-footer { display: none; }
+    .sidebar-logo, .nav-section, .nav-item span, .logo-sub { display: none; }
+    .sidebar-footer { padding: 10px 0; justify-content: center; }
+    .sidebar-footer span { display: none; }
     .nav-icon { width: 100%; text-align: center; font-size: 18px; }
     .nav-item { padding: 14px; justify-content: center; border-left: none; border-bottom: 3px solid transparent; }
     .nav-item.active { border-bottom-color: var(--cats-gold); background: rgba(200,146,42,0.08); }
@@ -612,9 +656,14 @@
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
-  <div class="sidebar-logo">
-    <img src="belgian-cats-logo.png" alt="Belgian Cats" style="width:100%;max-width:160px;display:block;margin:0 auto 8px;filter:brightness(0) invert(1);">
-    <div class="logo-sub">Medische Staf Portaal</div>
+  <div class="sidebar-logo" style="padding:12px 16px 12px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <img src="belgian-cats-logo.png" alt="Belgian Cats" style="width:36px;height:auto;flex-shrink:0;">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#fff;line-height:1.2;">Belgian Cats</div>
+        <div class="logo-sub" style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;">Medische Staf Portaal</div>
+      </div>
+    </div>
   </div>
   <nav>
     <div class="nav-section">Overzicht</div>
@@ -751,6 +800,9 @@
           <button class="filter-btn" onclick="filterSpelers('restricted', this)">Restricties</button>
           <button class="filter-btn" onclick="filterSpelers('injured', this)">Geblesseerd</button>
           <input type="text" class="search-input" placeholder="Zoek speler..." oninput="searchSpelers(this.value)">
+          <button class="btn btn-primary btn-sm" onclick="openPlayerModal()" style="margin-left:auto;">+ Speler toevoegen</button>
+          <button class="btn btn-danger btn-sm" id="deletePlayerModeBtn" onclick="toggleDeletePlayerMode()" style="margin-left:2px;padding:4px 9px;font-size:14px;line-height:1;" title="Speler verwijderen">−</button>
+          <button class="btn btn-danger btn-sm" id="confirmDeletePlayersBtn" onclick="confirmDeletePlayers()" style="display:none;margin-left:6px;">Verwijder</button>
         </div>
 
         <div class="card" style="padding: 0; overflow: hidden;">
@@ -1042,6 +1094,84 @@ Medische staf Belgian Cats</textarea>
       <span class="modal-close" onclick="closeModal('staffFormModal')">×</span>
     </div>
     <div id="staffFormContent"></div>
+  </div>
+</div>
+
+<!-- ===== MODAL: Speler toevoegen / bewerken ===== -->
+<div class="modal-overlay" id="playerModal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-title">
+      <span id="playerModalTitle">Speler toevoegen</span>
+      <span class="modal-close" onclick="closeModal('playerModal')">×</span>
+    </div>
+
+    <div class="form-group full" style="margin-bottom:16px;">
+      <label>Profielfoto</label>
+
+      <!-- Kies foto knop -->
+      <div class="photo-upload-area" id="photoUploadArea" style="margin-bottom:0;">
+        <input type="file" id="playerPhotoFile" accept="image/*" onchange="previewPhoto(this)">
+        <div class="crop-preview-circle" id="cropPreviewCircle">
+          <img id="cropPreviewImg" src="" alt="">
+        </div>
+        <div class="photo-upload-label" id="photoUploadLabel">Klik om een foto te kiezen</div>
+      </div>
+
+      <!-- Cropper -->
+      <div class="cropper-wrap" id="cropperWrap">
+        <img id="cropperImg" src="" alt="">
+      </div>
+      <div id="cropBtnRow" style="display:none;justify-content:center;gap:8px;margin-top:8px;">
+        <button type="button" class="btn btn-primary btn-sm" onclick="confirmCrop()">Bijsnijden bevestigen</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="cancelCrop()">Annuleren</button>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Naam</label>
+        <input type="text" id="pName" placeholder="Volledige naam">
+      </div>
+      <div class="form-group">
+        <label>Nummer</label>
+        <input type="number" id="pNumber" placeholder="Rugnummer" min="1" max="99">
+      </div>
+      <div class="form-group">
+        <label>Positie</label>
+        <select id="pPos">
+          <option value="PG">PG — Point Guard</option>
+          <option value="SG">SG — Shooting Guard</option>
+          <option value="SF">SF — Small Forward</option>
+          <option value="PF">PF — Power Forward</option>
+          <option value="C">C — Center</option>
+          <option value="G">G — Guard</option>
+          <option value="F">F — Forward</option>
+          <option value="G/F">G/F — Guard/Forward</option>
+          <option value="F/C">F/C — Forward/Center</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Club</label>
+        <input type="text" id="pClub" placeholder="Huidige club">
+      </div>
+      <div class="form-group">
+        <label>Geboortedatum</label>
+        <input type="date" id="pDob">
+      </div>
+      <div class="form-group">
+        <label>Lengte (cm)</label>
+        <input type="number" id="pHeight" placeholder="bv. 178" min="140" max="220">
+      </div>
+      <div class="form-group full">
+        <label>Contactmail</label>
+        <input type="email" id="pContact" placeholder="email@belgianbasketball.be">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="playerModalSaveBtn" onclick="submitPlayerForm()">Opslaan</button>
+      <button class="btn btn-outline" onclick="closeModal('playerModal')">Annuleren</button>
+    </div>
   </div>
 </div>
 
@@ -1442,17 +1572,26 @@ function renderSpelers(filter, search) {
   const tbody = document.getElementById('spelersTableBody');
   tbody.innerHTML = list.map(p => {
     const s = getLatestStatus(p.id);
+    const avatarHtml = p.photo_url
+      ? `<img src="${p.photo_url}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;">`
+      : `<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--cats-navy);color:var(--cats-gold-light);font-size:11px;font-weight:600;vertical-align:middle;margin-right:8px;">${initials(p.name)}</span>`;
+    const checkboxHtml = _deletePlayerMode
+      ? `<input type="checkbox" class="player-delete-cb" data-id="${p.id}" style="margin-right:8px;cursor:pointer;">`
+      : '';
     return `<tr>
       <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted);">${p.number}</td>
       <td>
-        <div class="player-name">${p.name}</div>
+        <div style="display:flex;align-items:center;">${checkboxHtml}${avatarHtml}<span class="player-name">${p.name}</span></div>
       </td>
       <td><span class="tag">${p.pos}</span></td>
       <td style="font-size:13px;color:var(--text-muted);">${p.club}</td>
       <td>${statusBadge(s.status)}</td>
       <td style="font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace;">${formatDate(s.date)}</td>
       <td>
-        <button class="btn btn-outline btn-sm" onclick="openPlayerDetail(${p.id})">Detail →</button>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-outline btn-sm" onclick="openPlayerDetail(${p.id})">Detail →</button>
+          <button class="btn btn-outline btn-sm" onclick="openPlayerModal(${p.id})">Bewerken</button>
+        </div>
       </td>
     </tr>`;
   }).join('');
@@ -1467,6 +1606,35 @@ function filterSpelers(f, btn) {
 
 function searchSpelers(val) { renderSpelers(activeFilter.spelers, val); }
 
+let _deletePlayerMode = false;
+
+function toggleDeletePlayerMode() {
+  _deletePlayerMode = !_deletePlayerMode;
+  const btn = document.getElementById('deletePlayerModeBtn');
+  const confirmBtn = document.getElementById('confirmDeletePlayersBtn');
+  btn.textContent = _deletePlayerMode ? '✕' : '−';
+  confirmBtn.style.display = _deletePlayerMode ? 'inline-flex' : 'none';
+  renderSpelers();
+}
+
+async function confirmDeletePlayers() {
+  const checked = [...document.querySelectorAll('.player-delete-cb:checked')];
+  if (!checked.length) { showToast('Geen spelers geselecteerd.'); return; }
+  if (!confirm(`${checked.length} speler(s) definitief verwijderen?`)) return;
+  const ids = checked.map(cb => parseInt(cb.dataset.id));
+  for (const id of ids) {
+    await db.from('players').delete().eq('id', id);
+    players = players.filter(p => p.id !== id);
+    statusUpdates = statusUpdates.filter(u => u.playerId !== id);
+    medicalHistory = medicalHistory.filter(h => h.playerId !== id);
+  }
+  _deletePlayerMode = false;
+  document.getElementById('deletePlayerModeBtn').textContent = '−';
+  document.getElementById('confirmDeletePlayersBtn').style.display = 'none';
+  renderSpelers();
+  showToast(`${ids.length} speler(s) verwijderd`);
+}
+
 function openPlayerDetail(id) {
   const p = getPlayerById(id);
   const s = getLatestStatus(id);
@@ -1476,17 +1644,22 @@ function openPlayerDetail(id) {
   document.getElementById('spelersListView').style.display = 'none';
   document.getElementById('spelersDetailView').style.display = 'block';
 
+  const avatarEl = p.photo_url
+    ? `<div class="player-avatar" style="padding:0;overflow:hidden;"><img src="${p.photo_url}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;"></div>`
+    : `<div class="player-avatar">${initials(p.name)}</div>`;
+
   document.getElementById('playerDetailContent').innerHTML = `
     <div class="player-header">
-      <div class="player-avatar">${initials(p.name)}</div>
+      ${avatarEl}
       <div class="player-info">
         <h2>${p.name}</h2>
         <p>#${p.number} · ${p.pos} · ${p.club}</p>
         <div style="margin-top:8px;">${statusBadge(s.status)}</div>
       </div>
-      <div style="margin-left:auto;display:flex;gap:8px;">
+      <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-gold btn-sm" onclick="generatePlayerPDF(${p.id})">📄 PDF rapport</button>
         <button class="btn btn-outline btn-sm" onclick="openUpdateModalForPlayer(${p.id})">Status updaten</button>
+        <button class="btn btn-outline btn-sm" onclick="openPlayerModal(${p.id})">✎ Bewerken</button>
       </div>
     </div>
 
@@ -1540,6 +1713,200 @@ function openPlayerDetail(id) {
 function closePlayerDetail() {
   document.getElementById('spelersListView').style.display = 'block';
   document.getElementById('spelersDetailView').style.display = 'none';
+}
+
+// ============================================================
+// SPELER TOEVOEGEN / BEWERKEN
+// ============================================================
+let _playerModalId = null; // null = toevoegen, anders = id van te bewerken speler
+
+function openPlayerModal(id) {
+  _playerModalId = id || null;
+  const title = document.getElementById('playerModalTitle');
+  title.textContent = id ? 'Speler bewerken' : 'Speler toevoegen';
+
+  // Reset cropper + preview
+  if (_cropperInstance) { _cropperInstance.destroy(); _cropperInstance = null; }
+  _croppedBlob = null;
+  document.getElementById('cropperWrap').style.display = 'none';
+  document.getElementById('cropBtnRow').style.display = 'none';
+  document.getElementById('cropPreviewCircle').style.display = 'none';
+  document.getElementById('cropPreviewImg').src = '';
+  document.getElementById('photoUploadLabel').textContent = 'Klik om een foto te kiezen';
+  document.getElementById('playerPhotoFile').value = '';
+
+  if (id) {
+    const p = getPlayerById(id);
+    document.getElementById('pName').value    = p.name    || '';
+    document.getElementById('pNumber').value  = p.number  || '';
+    document.getElementById('pPos').value     = p.pos     || 'G';
+    document.getElementById('pClub').value    = p.club    || '';
+    document.getElementById('pDob').value     = p.dob     || '';
+    document.getElementById('pHeight').value  = p.height  || '';
+    document.getElementById('pContact').value = p.contact || '';
+    if (p.photo_url) {
+      const circle = document.getElementById('cropPreviewCircle');
+      document.getElementById('cropPreviewImg').src = p.photo_url;
+      circle.style.display = 'block';
+      document.getElementById('photoUploadLabel').textContent = 'Klik om de foto te wijzigen';
+    }
+  } else {
+    document.getElementById('pName').value    = '';
+    document.getElementById('pNumber').value  = '';
+    document.getElementById('pPos').value     = 'G';
+    document.getElementById('pClub').value    = '';
+    document.getElementById('pDob').value     = '';
+    document.getElementById('pHeight').value  = '';
+    document.getElementById('pContact').value = '';
+  }
+
+  document.getElementById('playerModal').classList.add('open');
+}
+
+let _cropperInstance = null;
+let _croppedBlob = null;
+
+function previewPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    // Vernietig bestaande cropper
+    if (_cropperInstance) { _cropperInstance.destroy(); _cropperInstance = null; }
+
+    // Toon cropper
+    const wrap = document.getElementById('cropperWrap');
+    const img = document.getElementById('cropperImg');
+    img.src = e.target.result;
+    wrap.style.display = 'block';
+    document.getElementById('cropBtnRow').style.display = 'flex';
+    document.getElementById('photoUploadLabel').textContent = 'Sleep of zoom om bij te snijden';
+
+    _cropperInstance = new Cropper(img, {
+      aspectRatio: 1,
+      viewMode: 1,
+      dragMode: 'move',
+      autoCropArea: 0.9,
+      restore: false,
+      guides: false,
+      center: false,
+      highlight: false,
+      cropBoxMovable: false,
+      cropBoxResizable: false,
+      toggleDragModeOnDblclick: false,
+    });
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function confirmCrop() {
+  if (!_cropperInstance) return;
+  const canvas = _cropperInstance.getCroppedCanvas({ width: 400, height: 400 });
+  canvas.toBlob(blob => {
+    _croppedBlob = blob;
+    // Toon ronde preview
+    const previewCircle = document.getElementById('cropPreviewCircle');
+    const previewImg = document.getElementById('cropPreviewImg');
+    previewImg.src = canvas.toDataURL();
+    previewCircle.style.display = 'block';
+    document.getElementById('photoUploadLabel').textContent = 'Foto bijgesneden ✓ — klik om te wijzigen';
+    // Verberg cropper
+    document.getElementById('cropperWrap').style.display = 'none';
+    document.getElementById('cropBtnRow').style.display = 'none';
+    _cropperInstance.destroy();
+    _cropperInstance = null;
+  }, 'image/jpeg', 0.9);
+}
+
+function cancelCrop() {
+  if (_cropperInstance) { _cropperInstance.destroy(); _cropperInstance = null; }
+  document.getElementById('cropperWrap').style.display = 'none';
+  document.getElementById('cropBtnRow').style.display = 'none';
+  document.getElementById('playerPhotoFile').value = '';
+  document.getElementById('photoUploadLabel').textContent = 'Klik om een foto te kiezen';
+  _croppedBlob = null;
+}
+
+async function submitPlayerForm() {
+  const name    = document.getElementById('pName').value.trim();
+  const number  = parseInt(document.getElementById('pNumber').value, 10);
+  const pos     = document.getElementById('pPos').value;
+  const club    = document.getElementById('pClub').value.trim();
+  const dob     = document.getElementById('pDob').value;
+  const height  = document.getElementById('pHeight').value;
+  const contact = document.getElementById('pContact').value.trim();
+  const fileInput = document.getElementById('playerPhotoFile');
+
+  if (!name) { showToast('Vul een naam in.'); return; }
+
+  const btn = document.getElementById('playerModalSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Bezig…';
+
+  const row = { name, number, pos, club, dob, height: height ? parseInt(height,10) : null, contact };
+
+  let savedId = _playerModalId;
+  let photoUrl = null;
+
+  try {
+    if (_playerModalId) {
+      // Bewerken
+      const { data, error } = await db.from('players').update(row).eq('id', _playerModalId).select().single();
+      if (error) throw error;
+      photoUrl = getPlayerById(_playerModalId).photo_url || null;
+    } else {
+      // Toevoegen
+      const { data, error } = await db.from('players').insert(row).select().single();
+      if (error) throw error;
+      savedId = data.id;
+      players.push({ ...data, playerId: data.player_id });
+    }
+
+    // Foto uploaden als er een bijgesneden blob is
+    if (_croppedBlob) {
+      const path = `${savedId}.jpg`;
+      const { error: upErr } = await db.storage.from('player-photos').upload(path, _croppedBlob, { upsert: true, contentType: 'image/jpeg' });
+      if (upErr) {
+        console.error('Foto upload fout:', upErr);
+        btn.disabled = false;
+        btn.textContent = 'Opslaan';
+        showToast('Foto fout: ' + upErr.message);
+        return;
+      }
+      const { data: urlData } = db.storage.from('player-photos').getPublicUrl(path);
+      photoUrl = urlData.publicUrl;
+      const { error: dbErr } = await db.from('players').update({ photo_url: photoUrl }).eq('id', savedId);
+      if (dbErr) {
+        console.error('photo_url opslaan mislukt:', dbErr);
+        btn.disabled = false;
+        btn.textContent = 'Opslaan';
+        showToast('Foto URL fout: ' + dbErr.message);
+        return;
+      }
+      photoUrl = photoUrl + '?t=' + Date.now();
+      _croppedBlob = null;
+    }
+
+    // Lokale array bijwerken
+    const idx = players.findIndex(p => p.id === savedId);
+    const updatedPlayer = { ...row, id: savedId, photo_url: photoUrl };
+    if (idx >= 0) {
+      players[idx] = { ...players[idx], ...updatedPlayer };
+    }
+
+    // Selectbox bijwerken
+    const sel = document.getElementById('updatePlayer');
+    sel.innerHTML = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+    closeModal('playerModal');
+    renderSpelers();
+    showToast(_playerModalId ? 'Speler bijgewerkt.' : 'Speler toegevoegd.');
+  } catch(e) {
+    console.error(e);
+    showToast('Fout bij opslaan: ' + (e.message || e));
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Opslaan';
 }
 
 // ============================================================
@@ -2149,120 +2516,283 @@ function sendMailReport() {
 // ============================================================
 // PDF GENERATION
 // ============================================================
-function generatePlayerPDF(playerId) {
+async function generatePlayerPDF(playerId) {
   const { jsPDF } = window.jspdf;
+  const p          = getPlayerById(playerId);
+  const hist       = medicalHistory.filter(h => h.playerId === playerId).sort((a,b) => b.date.localeCompare(a.date));
+  const allLogs    = formLogs.filter(f => f.playerId === playerId).sort((a,b) => b.date.localeCompare(a.date));
+  const artsLogs   = allLogs.filter(f => f.type === 'Arts');
+  const kineLogs   = allLogs.filter(f => f.type === 'Kine');
+  const sc         = staffContacts[playerId];
+
+  // ── Load images ───────────────────────────────────────────
+  async function urlToDataUrl(src) {
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      await new Promise(r => { img.onload = r; img.onerror = r; img.src = src; });
+      if (!img.naturalWidth) return null;
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth; c.height = img.naturalHeight;
+      c.getContext('2d').drawImage(img, 0, 0);
+      return c.toDataURL('image/png');
+    } catch { return null; }
+  }
+  const photoDataUrl = p.photo_url ? await urlToDataUrl(p.photo_url.split('?')[0]) : null;
+  const logoDataUrl  = await urlToDataUrl('belgian-cats-report-logo.jpg');
+
+  // ── Setup ─────────────────────────────────────────────────
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const p = getPlayerById(playerId);
-  const s = getLatestStatus(playerId);
-  const hist = medicalHistory.filter(h => h.playerId === playerId);
-  const updates = statusUpdates.filter(u => u.playerId === playerId).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+  const W = 210, M = 15, CW = W - 2 * M;
+  const NAVY=[11,31,58], GOLD=[200,146,42], WHITE=[255,255,255],
+        TEXT=[26,22,18], MUTED=[107,101,96], LGRAY=[240,237,232];
+  let y = 0;
 
-  const W = 210, margin = 20;
+  const fc = (...c) => doc.setFillColor(...c);
+  const tc = (...c) => doc.setTextColor(...c);
+  const dc = (...c) => doc.setDrawColor(...c);
+  const ft = (s,b,it) => doc.setFont('helvetica', b&&it?'bolditalic':b?'bold':it?'italic':'normal') && doc.setFontSize(s) || doc.setFont('helvetica', b&&it?'bolditalic':b?'bold':it?'italic':'normal');
 
-  // Header
-  doc.setFillColor(11, 31, 58);
-  doc.rect(0, 0, W, 40, 'F');
-  doc.setTextColor(200, 146, 42);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text('BELGIAN CATS — MEDISCH RAPPORT', margin, 14);
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
-  doc.text(p.name, margin, 26);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`#${p.number} · ${p.pos} · ${p.club}`, margin, 34);
-  doc.text(`Gegenereerd: ${formatDate(today())}`, W - margin - 60, 34);
+  function newPage() { doc.addPage(); y = 15; }
+  function guard(h=15) { if (y + h > 278) newPage(); }
 
-  // Status badge
-  const statusColors2 = { fit: [45, 122, 58], 'fit-complaints': [91, 138, 47], restricted: [199, 106, 0], injured: [180, 44, 44] };
-  const [r, g, b] = statusColors2[s.status];
-  doc.setFillColor(r, g, b);
-  doc.roundedRect(margin, 48, 60, 10, 2, 2, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text(statusLabel(s.status).toUpperCase(), margin + 4, 55);
-
-  // Sections
-  let y = 68;
-
-  const section = (title) => {
-    doc.setTextColor(11, 31, 58);
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text(title, margin, y);
-    doc.setDrawColor(226, 221, 213);
-    doc.line(margin, y + 2, W - margin, y + 2);
-    y += 10;
-  };
-
-  const row = (label, value) => {
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(107, 101, 96);
-    doc.text(label, margin, y);
-    doc.setTextColor(26, 22, 18);
-    doc.setFont('helvetica', 'bold');
-    doc.text(String(value || '—'), margin + 45, y);
-    y += 7;
-  };
-
-  section('Persoonlijke gegevens');
-  row('Geboortedatum', formatDate(p.dob));
-  row('Lengte', `${p.height} cm`);
-  row('Club', p.club);
-  row('Contact', p.contact);
-
-  y += 4;
-  section('Huidige status');
-  row('Status', statusLabel(s.status));
-  row('Notitie', s.note || 'Geen actieve klachten');
-  row('Datum update', formatDate(s.date));
-  row('Ingevoerd door', s.by);
-
-  if (hist.length) {
-    y += 4;
-    section('Medische geschiedenis');
-    hist.forEach(h => {
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(26, 22, 18);
-      doc.text(`${formatDate(h.date)} · ${h.type}`, margin, y);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(107, 101, 96);
-      const lines = doc.splitTextToSize(h.description, W - margin * 2 - 10);
-      doc.text(lines, margin + 4, y + 5);
-      y += 5 + (lines.length * 5) + 3;
-    });
+  function sectionBar(title) {
+    guard(16);
+    fc(...NAVY); doc.rect(M, y, CW, 9.5, 'F');
+    fc(...GOLD);  doc.rect(M, y+9.5, CW, 0.8, 'F'); // gold accent line under bar
+    tc(...WHITE); doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    doc.text(title, W/2, y+6.5, { align:'center' });
+    y += 15;
   }
 
-  y += 4;
-  section('Statusgeschiedenis');
-  updates.forEach(u => {
-    doc.setFontSize(8.5);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(107, 101, 96);
-    doc.text(`${formatDate(u.date)}`, margin, y);
-    doc.setTextColor(26, 22, 18);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`${statusLabel(u.status)}`, margin + 28, y);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(107, 101, 96);
-    if (u.note) doc.text(`— ${u.note}`, margin + 60, y);
-    y += 6;
+  // ── HEADER ────────────────────────────────────────────────
+  const hH = 66;
+
+  // White header background
+  fc(...WHITE); doc.rect(0, 0, W, hH, 'F');
+
+  // Belgian flag strip — vertical, far right, full header height
+  const fW = 5, fX = W - fW;
+  fc(20,20,20);  doc.rect(fX, 0,       fW, hH/3, 'F');
+  fc(...GOLD);   doc.rect(fX, hH/3,    fW, hH/3, 'F');
+  fc(185,15,15); doc.rect(fX, hH*2/3,  fW, hH/3, 'F');
+
+  // Logo (left, white-bg logo blends into white header)
+  const lW=54, lH=30;
+  if (logoDataUrl) {
+    doc.addImage(logoDataUrl, 'JPEG', M, (hH-lH)/2, lW, lH);
+  } else {
+    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.text('BELGIAN', M, 28);
+    tc(...GOLD); doc.setFontSize(20); doc.text('CATS', M, 42);
+  }
+
+  // Player photo — square, before flag strip
+  const phS=44, phX=fX-4-phS, phY=(hH-phS)/2;
+  if (photoDataUrl) {
+    doc.addImage(photoDataUrl, 'JPEG', phX, phY, phS, phS);
+  } else {
+    fc(220,216,210); doc.rect(phX, phY, phS, phS, 'F');
+    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(20);
+    doc.text(initials(p.name), phX+phS/2, phY+phS/2+3.5, {align:'center'});
+  }
+
+  // Info section (between logo and photo)
+  const ix = M+lW+10, iW = phX-ix-4;
+
+  // "MEDICAL REPORT" label + top gold rule
+  fc(...GOLD); doc.rect(ix, 12, iW, 0.4, 'F');
+  tc(...GOLD); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+  doc.text('MEDICAL REPORT', ix, 11);
+
+  // Player name
+  tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(15);
+  doc.text(p.name, ix, 24);
+  // Gold underline under name
+  fc(...GOLD); doc.rect(ix, 26.5, Math.min(iW, doc.getTextWidth(p.name)+2), 0.6, 'F');
+
+  // Club
+  tc(60,60,60); doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text(p.club||'—', ix, 36);
+
+  // Position · Number
+  tc(...MUTED); doc.setFontSize(8.5);
+  doc.text(`${p.pos||'—'}  ·  #${p.number||'—'}`, ix, 44);
+
+  // Date
+  tc(...MUTED); doc.setFont('helvetica','normal'); doc.setFontSize(7.5);
+  doc.text(`Date: ${new Date().toLocaleDateString('en-GB')}`, ix, 59);
+
+  // Gold bottom border of header
+  fc(...GOLD); doc.rect(0, hH, W, 1.2, 'F');
+
+  y = hH + 1.2 + 9;
+  const sortedLogs = [...allLogs].sort((a,b)=>a.date.localeCompare(b.date));
+  const periodText = sortedLogs.length >= 2
+    ? `${formatDate(sortedLogs[0].date)} — ${formatDate(sortedLogs[sortedLogs.length-1].date)}`
+    : sortedLogs.length === 1 ? formatDate(sortedLogs[0].date) : '';
+  // Light background band for period
+  fc(248,245,239); doc.rect(M, y-4, CW, 8, 'F');
+  tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.text('Period', M+3, y+0.5);
+  tc(...TEXT); doc.setFont('helvetica','normal');
+  if (periodText) doc.text(periodText, M+22, y+0.5);
+  y += 11;
+
+  // ── DEAR TEXT ─────────────────────────────────────────────
+  tc(...TEXT); doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  const dear = [
+    'Dear,',
+    '',
+    'As you already know, we want to ensure a good communication about the medical and physical status of your player.',
+    'Before joining the national team, all the players undergo a medical check-up by our doctors of the federation. As well',
+    'during the campaign they are closely followed by the entire medical staff.',
+    "That's why we send you a medical report of your player at the end of each period with the Belgian Cats.",
+    'Should you wish to communicate about any important medical information with us, you can inform your medical staff to',
+    'contact belgiancats.medical@gmail.com.',
+    'On the other hand we would appreciate any medical information of important value, communicated to the same e-mail',
+    'address.',
+  ];
+  dear.forEach(line => { doc.text(line, M, y); y += line === '' ? 2 : 4.8; });
+  y += 5;
+
+  // ── MEDICAL CHECK-UP / INTAKE ─────────────────────────────
+  const intakeItems = [];
+  artsLogs.slice(0,5).forEach(l => { if (l.note) intakeItems.push('- ' + l.note); });
+  hist.slice(0,5).forEach(h => {
+    const str = `- ${formatDate(h.date)}: ${h.description}`;
+    if (!intakeItems.some(i => i.includes(h.description))) intakeItems.push(str);
   });
 
-  // Footer
-  doc.setFillColor(248, 245, 239);
-  doc.rect(0, 280, W, 17, 'F');
-  doc.setTextColor(107, 101, 96);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Belgian Cats — Medische Staf · Vertrouwelijk document', margin, 290);
-  doc.text(`Pagina 1`, W - margin - 10, 290);
+  if (intakeItems.length) {
+    sectionBar('MEDICAL CHECK-UP / INTAKE');
+    tc(...TEXT); doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    doc.text('Doc:', M, y); y += 6;
+    doc.setFont('helvetica','normal');
+    intakeItems.forEach(item => {
+      guard(8);
+      const lines = doc.splitTextToSize(item, CW-4);
+      doc.text(lines, M+3, y);
+      y += lines.length * 4.8 + 2;
+    });
+    y += 4;
+  }
 
-  doc.save(`MedischRapport_${p.name.replace(/\s/g, '_')}_${today()}.pdf`);
+  // ── MEDICAL COMMENT ───────────────────────────────────────
+  const commentItems = hist.filter(h=>h.description);
+  if (commentItems.length || kineLogs.length) {
+    guard(20);
+    sectionBar('MEDICAL COMMENT');
+
+    tc(...TEXT); doc.setFont('helvetica','bolditalic'); doc.setFontSize(9);
+    doc.text('Doc / Physiotherapists:', M, y); y += 7;
+
+    // Column header row
+    const c1=M, c2=M+66, c3=M+128, w1=62, w2=58, w3=54;
+    fc(230,226,220); doc.rect(M, y-4, CW, 8, 'F');
+    dc(200,195,188); doc.setLineWidth(0.3);
+    doc.line(c2-2, y-4, c2-2, y+4);
+    doc.line(c3-2, y-4, c3-2, y+4);
+    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
+    doc.text('Injury / illness / complaint', c1+2, y+0.5);
+    doc.text('Approach',           c2+2, y+0.5);
+    doc.text('Prognosis & Advice', c3+2, y+0.5);
+    dc(200,195,190); doc.setLineWidth(0.4);
+    doc.line(M, y+4, W-M, y+4);
+    y += 9;
+
+    const rows = Math.max(commentItems.length, kineLogs.length, 1);
+    for (let i=0; i<rows; i++) {
+      guard(14);
+      const h   = commentItems[i];
+      const kine= kineLogs[i];
+      const arts= artsLogs[i];
+
+      const t1 = h    ? `- ${formatDate(h.date)}: ${h.description}` : '—';
+      const t2 = kine ? `- ${kine.note||'—'}`                       : '—';
+      const t3 = arts?.note || '—';
+
+      const l1=doc.splitTextToSize(t1,w1), l2=doc.splitTextToSize(t2,w2), l3=doc.splitTextToSize(t3,w3);
+      const rh = Math.max(l1.length,l2.length,l3.length)*4.5+5;
+
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+      tc(...TEXT);  doc.text(l1, c1, y);
+      tc(...MUTED); doc.text(l2, c2, y);
+      tc(...TEXT);  doc.text(l3, c3, y);
+      dc(...LGRAY); doc.setLineWidth(0.2);
+      doc.line(M, y+rh-2, W-M, y+rh-2);
+      y += rh;
+    }
+    y += 4;
+  }
+
+  // ── CONTACT ───────────────────────────────────────────────
+  guard(70);
+  sectionBar('CONTACT');
+
+  const contacts = [
+    { role:'Head Coach',             name:'Mike Thibault',         email:'',                                    phone:'(+1(860)9613780)' },
+    { role:'Assistant Coach',        name:'Angillis Pascal',       email:'',                                    phone:'' },
+    { role:'Sports Manager',         name:'Sven Van Camp',         email:'sven.vancamp@basketbal.vlaanderen',   phone:'(+32 486 89 79 53)' },
+    { role:'Physical Trainer',       name:'Kaiser Pierre-Yves',    email:'py.kaiser@awbb.be',                   phone:'(+32 497 89 69 88)' },
+    { role:'Physiotherapist 1',      name:'Duthoit Jelle',         email:'duthoitjelle@gmail.com',              phone:'(+32 498 39 35 13)' },
+    { role:'Physiotherapist 2',      name:'Olders Tom',            email:'tomolders@gmail.com',                 phone:'(+32 472 41 77 75)' },
+    { role:'Doctor 1',               name:'Aertgeerts Sven',       email:'sven.aertgeerts@bleyenbergh.com',     phone:'(+32 495 50 04 11)' },
+    { role:'Doctor 2',               name:'De Ceulaer Karolien',   email:'karolien.deceulaer@bleyenbergh.com',  phone:'(+32 495 69 00 84)' },
+    { role:'Doctor 3',               name:'Algoed Hannah',         email:'hannah.algoed@gmail.com',             phone:'(+32 496 67 26 80)' },
+    { role:'Medical communication',  name:'',                      email:'belgiancats.medical@gmail.com',       phone:'' },
+  ];
+  if (sc?.doc)     contacts.push({ role:'Club Doctor',           name:sc.doc.name||'',     email:sc.doc.email||'',     phone:sc.doc.phone||'' });
+  if (sc?.kine)    contacts.push({ role:'Club Physiotherapist',  name:sc.kine.name||'',    email:sc.kine.email||'',    phone:sc.kine.phone||'' });
+  if (sc?.manager) contacts.push({ role:'Club Manager',          name:sc.manager.name||'', email:sc.manager.email||'', phone:'' });
+  if (sc?.coach)   contacts.push({ role:'Club Coach',            name:sc.coach.name||'',   email:'',                   phone:'' });
+
+  // Contact table header
+  const rx=M, nx=M+42, ex=M+88, phx=M+152;
+  fc(230,226,220); doc.rect(M, y-4, CW, 7.5, 'F');
+  tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.text('Role', rx+2, y+0.2);
+  doc.text('Name', nx+2, y+0.2);
+  doc.text('Email', ex+2, y+0.2);
+  doc.text('Phone', phx+2, y+0.2);
+  dc(200,195,188); doc.setLineWidth(0.3);
+  doc.line(nx-1, y-4, nx-1, y+3.5);
+  doc.line(ex-1, y-4, ex-1, y+3.5);
+  doc.line(phx-1, y-4, phx-1, y+3.5);
+  doc.line(M, y+3.5, W-M, y+3.5);
+  y += 8;
+
+  contacts.forEach((r,i) => {
+    guard(7);
+    doc.setFontSize(8);
+    if (i%2===0) { fc(248,246,242); doc.rect(M, y-3.5, CW, 6.5, 'F'); }
+    // subtle vertical dividers
+    dc(220,215,208); doc.setLineWidth(0.2);
+    doc.line(nx-1, y-3.5, nx-1, y+3); doc.line(ex-1, y-3.5, ex-1, y+3); doc.line(phx-1, y-3.5, phx-1, y+3);
+    tc(...NAVY);  doc.setFont('helvetica','bold');   doc.text(r.role,  rx+2, y);
+    tc(...TEXT);  doc.setFont('helvetica','normal'); doc.text(r.name,  nx+2, y);
+    tc(0,60,140); doc.text(r.email, ex+2, y);
+    tc(...MUTED); doc.text(r.phone, phx+2, y);
+    y += 6.5;
+  });
+
+  // ── FOOTER (all pages) ────────────────────────────────────
+  const total = doc.internal.getNumberOfPages();
+  for (let i=1; i<=total; i++) {
+    doc.setPage(i);
+    // Gold accent line above footer
+    fc(...GOLD); doc.rect(0, 283, W, 0.8, 'F');
+    fc(...LGRAY); doc.rect(0, 283.8, W, 13.2, 'F');
+    // Left: logo text + label
+    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+    doc.text('BELGIAN CATS', M, 290);
+    tc(...MUTED); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+    doc.text('Medical Staff  ·  Confidential document', M+27, 290);
+    // Right: page number
+    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+    doc.text(`${i} / ${total}`, W-M, 290, {align:'right'});
+  }
+
+  doc.save(`MedicalReport_${p.name.replace(/\s/g,'_')}_${today()}.pdf`);
   showToast(`PDF gegenereerd voor ${p.name} ✓`);
 }
 
