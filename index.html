@@ -692,7 +692,7 @@
     </div>
     <div class="nav-section">Invoer</div>
     <div class="nav-item" onclick="showPage('arts')">
-      <span class="nav-icon">🩺</span><span>Arts</span>
+      <span class="nav-icon">🩺</span><span>Doctor</span>
     </div>
     <div class="nav-item" onclick="showPage('kine')">
       <span class="nav-icon">🏃</span><span>Kinesist</span>
@@ -939,106 +939,258 @@
     <!-- ===== ARTS ===== -->
     <div class="page" id="page-arts">
       <div class="section-header">
-        <div class="section-title">🩺 Arts — Medische invoer</div>
+        <div class="section-title">🩺 Doctor — Medical Input</div>
       </div>
-      <div class="grid-2" style="align-items:start;">
-        <div class="card">
-          <div class="card-title">Nieuwe invoer</div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Speler</label>
-              <select id="arts-player" onchange="renderArtsHistory()">
-                <option value="">— Kies speler —</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Datum</label>
-              <input type="date" id="arts-date">
-            </div>
-            <div class="form-group full">
-              <label>Ingevoerd door (arts)</label>
-              <input type="text" id="arts-by" placeholder="Naam arts">
-            </div>
-            <div class="form-group full">
-              <label>Intake — klinische bevindingen</label>
-              <textarea id="arts-intake" rows="3" placeholder="Anamnese, klachten, bevindingen bij onderzoek..."></textarea>
-            </div>
-          </div>
 
-          <div style="margin:14px 0 8px;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);border-top:1px solid var(--border);padding-top:14px;">Blessure / Diagnose</div>
-          <div class="form-grid">
-            <div class="form-group full">
-              <label>Diagnose</label>
-              <input type="text" id="arts-diagnose" placeholder="Bijv. enkeldistorsie graad II">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+          <!-- SECTIE 1: MEDISCHE INTAKE -->
+          <div class="card">
+            <div class="card-title" style="display:flex;align-items:center;gap:8px;">
+              <span style="background:var(--cats-navy);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;letter-spacing:.5px;">INTAKE</span>
+              Medical Intake
             </div>
-            <div class="form-group">
-              <label>Lichaamsdeel</label>
-              <select id="arts-part">
-                <option value="">— Geen —</option>
-                <option>Enkel</option><option>Knie</option><option>Hamstring</option>
-                <option>Quadriceps</option><option>Lies</option><option>Rug</option>
-                <option>Schouder</option><option>Pols</option><option>Voet</option>
-                <option>Hoofd / Hersenschudding</option><option>Andere</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Ernst</label>
-              <select id="arts-ernst">
-                <option value="">— Geen —</option>
-                <option>Graad 1 — licht</option>
-                <option>Graad 2 — matig</option>
-                <option>Graad 3 — zwaar</option>
-              </select>
-            </div>
-            <div class="form-group full">
-              <label>Beeldvorming</label>
-              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
-                <label style="font-weight:400;display:flex;align-items:center;gap:5px;margin:0;"><input type="checkbox" id="arts-img-xray"> X-ray</label>
-                <label style="font-weight:400;display:flex;align-items:center;gap:5px;margin:0;"><input type="checkbox" id="arts-img-echo"> Echografie</label>
-                <label style="font-weight:400;display:flex;align-items:center;gap:5px;margin:0;"><input type="checkbox" id="arts-img-mri"> MRI</label>
-                <label style="font-weight:400;display:flex;align-items:center;gap:5px;margin:0;"><input type="checkbox" id="arts-img-ct"> CT-scan</label>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Player</label>
+                <select id="intake-player" onchange="renderArtsHistory()">
+                  <option value="">— Select player —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="intake-datum">
+              </div>
+              <div class="form-group full">
+                <label>Doctor</label>
+                <select id="intake-arts">
+                  <option value="">— Select doctor —</option>
+                  <option>Sven Aertgeerts</option>
+                  <option>Karolien De Ceulaer</option>
+                  <option>Hannah Algoed</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label>Complaints <span style="font-weight:400;font-size:11px;color:var(--cats-gold);">(included in report)</span></label>
+                <textarea id="intake-klachten" rows="2" placeholder="Chief complaint reported by the player..."></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Clinical Findings <span style="font-weight:400;font-size:11px;color:var(--cats-gold);">(included in report)</span></label>
+                <textarea id="intake-huidig" rows="2" placeholder="Clinical findings upon examination..."></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Advice <span style="font-weight:400;font-size:11px;color:var(--cats-gold);">(included in report)</span></label>
+                <textarea id="intake-advice" rows="2" placeholder="Medical advice and recommendations..."></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Extra Info <span style="font-weight:400;font-size:11px;color:var(--text-muted);">(not included in report)</span></label>
+                <textarea id="intake-extra" rows="2" placeholder="Internal notes, context, follow-up reminders..."></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Medical History <span style="font-weight:400;font-size:11px;color:var(--text-muted);">(not included in report)</span></label>
+                <textarea id="intake-voorgeschiedenis" rows="2" placeholder="Relevant medical background..."></textarea>
               </div>
             </div>
-            <div class="form-group full">
-              <label>Extra info / opmerkingen</label>
-              <textarea id="arts-extra" rows="2" placeholder="Verdere toelichting, prognose, terugkeer..."></textarea>
-            </div>
-            <div class="form-group full">
-              <label>Medicatie</label>
-              <input type="text" id="arts-meds" placeholder="Medicatie + dosis (bijv. Ibuprofen 400mg 3x/dag)">
-            </div>
-            <div class="form-group">
-              <label>Status update</label>
-              <select id="arts-status">
-                <option value="">— Geen statuswijziging —</option>
-                <option value="fit">Fit</option>
-                <option value="fit-complaints">Fit met klachten</option>
-                <option value="restricted">Restricties</option>
-                <option value="injured">Geblesseerd</option>
-              </select>
+            <div class="btn-row" style="margin-top:16px;">
+              <button class="btn btn-primary" onclick="submitIntakeForm()">Save intake</button>
+              <button class="btn btn-outline" onclick="resetIntakeForm()">Clear</button>
             </div>
           </div>
-          <div class="btn-row" style="margin-top:16px;">
-            <button class="btn btn-primary" onclick="submitArtsForm()">Opslaan</button>
-            <button class="btn btn-outline" onclick="resetArtsForm()">Wissen</button>
-          </div>
-        </div>
 
-        <div>
-          <div class="card" id="arts-history-card">
-            <div class="card-title">Medische voorgeschiedenis</div>
-            <div id="arts-history-content" style="color:var(--text-muted);font-size:13px;">Kies een speler om de voorgeschiedenis te zien.</div>
+          <!-- SECTIE 2: NEW INJURY / DIAGNOSIS -->
+          <div class="card" style="position:sticky;top:16px;">
+            <div class="card-title" style="display:flex;align-items:center;gap:8px;">
+              <span style="background:var(--injured);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px;letter-spacing:.5px;">INJURY</span>
+              New Injury / Diagnosis
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Player</label>
+                <select id="injury-player" onchange="renderArtsHistory()">
+                  <option value="">— Select player —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Doctor</label>
+                <select id="injury-arts">
+                  <option value="">— Select doctor —</option>
+                  <option>Sven Aertgeerts</option>
+                  <option>Karolien De Ceulaer</option>
+                  <option>Hannah Algoed</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Start Date</label>
+                <input type="date" id="injury-startdatum">
+              </div>
+              <div class="form-group">
+                <label>End Date <span style="font-weight:400;font-size:11px;color:var(--text-muted);">(leave empty = active)</span></label>
+                <input type="date" id="injury-einddatum">
+              </div>
+              <div class="form-group">
+                <label>Diagnosis</label>
+                <input type="text" id="injury-diagnose" placeholder="e.g. Lateral ankle sprain grade II">
+              </div>
+              <div class="form-group">
+                <label>Side</label>
+                <select id="injury-zijde">
+                  <option value="">— Not applicable —</option>
+                  <option value="left">Left</option>
+                  <option value="right">Right</option>
+                  <option value="both">Both</option>
+                </select>
+              </div>
+              <div class="form-group full" style="margin-top:2px;">
+                <label>Status</label>
+                <select id="injury-status">
+                  <option value="out">Out</option>
+                  <option value="restricted">Restricted</option>
+                  <option value="klachten">Complaints</option>
+                  <option value="fit">Fit / Recovered</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Body Part <span style="font-weight:400;font-size:11px;color:var(--text-muted);">(joint / region)</span></label>
+                <select id="injury-lichaamsdeel">
+                  <option value="">— None —</option>
+                  <option>Head</option>
+                  <option>Shoulder</option>
+                  <option>Upper arm</option>
+                  <option>Elbow</option>
+                  <option>Lower arm</option>
+                  <option>Wrist</option>
+                  <option>Hand</option>
+                  <option>Cervical spine (neck)</option>
+                  <option>Thoracic spine</option>
+                  <option>Lumbar spine</option>
+                  <option>Hip</option>
+                  <option>Groin</option>
+                  <option>Upper leg</option>
+                  <option>Knee</option>
+                  <option>Lower leg</option>
+                  <option>Ankle</option>
+                  <option>Foot</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Type of Injury <span style="font-weight:400;font-size:11px;color:var(--text-muted);">(injury registration)</span></label>
+                <select id="injury-type">
+                  <option value="">— None —</option>
+                  <option>Sprain (ligament)</option>
+                  <option>Strain (muscle/tendon)</option>
+                  <option>Contusion</option>
+                  <option>Tendinopathy</option>
+                  <option>Overuse injury</option>
+                  <option>Stress fracture</option>
+                  <option>Fracture</option>
+                  <option>Dislocation</option>
+                  <option>Subluxation</option>
+                  <option>Concussion</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Severity</label>
+                <select id="injury-ernst">
+                  <option value="">— None —</option>
+                  <option>Grade 1 — mild</option>
+                  <option>Grade 2 — moderate</option>
+                  <option>Grade 3 — severe</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label>Anamnesis</label>
+                <textarea id="injury-anamnese" rows="2" placeholder="Patient history and reported complaints..."></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Clinical Findings / Exam</label>
+                <textarea id="injury-clinical" rows="2" placeholder="Physical examination findings..."></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Remarks</label>
+                <textarea id="injury-opmerkingen" rows="2" placeholder="Prognosis, treatment plan, expected return to play..."></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Medication</label>
+                <input type="text" id="injury-medicatie" placeholder="Medication + dosage (e.g. Ibuprofen 400mg 3x/day)">
+              </div>
+              <div class="form-group full">
+                <label>Attachment <span style="font-weight:400;font-size:11px;color:var(--text-muted);">(PDF, image, scan...)</span></label>
+                <div style="margin-left:8px;display:flex;align-items:center;gap:10px;">
+                  <label for="injury-attachment" style="display:inline-flex;align-items:center;gap:6px;padding:7px 12px;background:#fff;color:var(--text-muted);border:1px solid var(--border);border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:border-color 0.15s;" onmouseover="this.style.borderColor='var(--cats-navy)';this.style.color='var(--cats-navy)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+                    📎 Choose file
+                  </label>
+                  <span id="injury-attachment-label" style="font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No file chosen</span>
+                </div>
+                <input type="file" id="injury-attachment" accept=".pdf,.jpg,.jpeg,.png,.heic" multiple style="display:none;" onchange="document.getElementById('injury-attachment-label').textContent=this.files.length?this.files.length+' file'+(this.files.length>1?'s':'')+' selected':'No file chosen'">
+                <div id="injury-attachment-current" style="display:none;margin-top:6px;margin-left:8px;font-size:12px;color:var(--text-muted);"></div>
+              </div>
+            </div>
+            <div class="btn-row" style="margin-top:16px;">
+              <button class="btn btn-primary" onclick="submitInjuryForm()">Save injury</button>
+              <button class="btn btn-outline" onclick="resetInjuryForm()">Clear</button>
+            </div>
           </div>
-        </div>
+
+        </div><!-- /left column -->
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+          <!-- PATIENT DOSSIER CHECKLIST -->
+          <div class="card" style="border-color:#C8922A40;background:linear-gradient(135deg,#fffdf7 0%,#fff8ec 100%);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--cats-gold);">Patient Dossier</span>
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;border-bottom:1px solid #e8dfc8;padding-bottom:10px;">Permanent medical background — independent of injuries or intakes.</div>
+            <div class="form-grid" style="margin-bottom:12px;">
+              <div class="form-group">
+                <label>Player</label>
+                <select id="checklist-player" onchange="loadChecklistForPlayer();renderArtsHistory()">
+                  <option value="">— Select player —</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label>Doctor</label>
+                <select id="checklist-arts">
+                  <option value="">— Select doctor —</option>
+                  <option>Sven Aertgeerts</option>
+                  <option>Karolien De Ceulaer</option>
+                  <option>Hannah Algoed</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="checklist-categories">
+              <!-- rendered by JS -->
+            </div>
+
+            <div class="btn-row" style="margin-top:14px;">
+              <button class="btn btn-primary" onclick="submitChecklistForm()">Save dossier</button>
+              <button class="btn btn-outline" onclick="resetChecklistForm()">Clear</button>
+            </div>
+          </div>
+
+          <div class="card" id="arts-history-card" style="margin-top:28px;">
+            <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+              Injury History
+              <button onclick="openPatientRecords()" style="font-size:12px;font-weight:500;color:var(--cats-gold);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;">View all →</button>
+            </div>
+            <div id="arts-history-content" style="color:var(--text-muted);font-size:13px;">Select a player to view injury history.</div>
+          </div>
+
+        </div><!-- /right column -->
       </div>
 
-      <div class="card" style="margin-top:16px;">
-        <div class="card-title">Recente arts-invoer</div>
-        <div style="overflow-x:auto;">
-          <table>
-            <thead><tr><th>Datum</th><th>Speler</th><th>Intake</th><th>Diagnose</th><th>Ernst</th><th>Status</th><th>Door</th></tr></thead>
-            <tbody id="artsLogsTable"></tbody>
-          </table>
+      <!-- RECENTE ACTIVITEIT -->
+      <div class="grid-2" style="margin-top:16px;align-items:start;">
+        <div class="card">
+          <div class="card-title">Recent Intakes</div>
+          <div id="arts-intakes-list" style="color:var(--text-muted);font-size:13px;">No intakes yet.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Recent Injuries</div>
+          <div id="arts-injuries-list" style="color:var(--text-muted);font-size:13px;">No injuries yet.</div>
         </div>
       </div>
     </div>
@@ -1158,6 +1310,35 @@
         </div>
         <div class="btn-row" style="margin-top:12px;">
           <button class="btn btn-primary" onclick="generatePeriodPDF()">📥 Download periodeoverzicht</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">Day by Day rapport — Liggend overzicht</div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+          <label style="margin:0;font-size:13px;font-weight:500;white-space:nowrap;">Periode:</label>
+          <select id="dbd-saved-periods" onchange="loadDayByDayPeriod()" style="flex:1;min-width:180px;max-width:280px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--surface);">
+            <option value="">— Kies een periode —</option>
+          </select>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <input type="date" id="dbd-from" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;">
+            <span style="color:var(--text-muted);font-size:13px;">t/m</span>
+            <input type="date" id="dbd-to" style="padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;">
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <label>Spelers in rapport</label>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <button class="btn btn-outline btn-sm" onclick="dbdSelectAll(true)">Alle selecteren</button>
+            <button class="btn btn-outline btn-sm" onclick="dbdSelectAll(false)">Geen selecteren</button>
+          </div>
+          <div id="dbd-player-checkboxes" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:4px;max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--surface);"></div>
+        </div>
+
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn btn-primary" onclick="generateDayByDayPDF()">📥 Download day by day rapport</button>
         </div>
       </div>
 
@@ -1452,6 +1633,32 @@ Medische staf Belgian Cats</textarea>
   </div>
 </div>
 
+<!-- ===== MODAL: Patient Records (Injuries + Intakes) ===== -->
+<div class="modal-overlay" id="patientRecordsModal">
+  <div class="modal" style="max-width:680px;max-height:85vh;display:flex;flex-direction:column;">
+    <div class="modal-title" style="flex-shrink:0;">
+      Patient Records
+      <span class="modal-close" onclick="closeModal('patientRecordsModal')">×</span>
+    </div>
+
+    <!-- Player selector -->
+    <div style="flex-shrink:0;margin-bottom:14px;">
+      <select id="pr-player-select" onchange="renderPatientRecords()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;background:var(--cats-cream);color:var(--text);">
+        <option value="">— Select a player —</option>
+      </select>
+    </div>
+
+    <!-- Tabs -->
+    <div style="flex-shrink:0;display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:14px;">
+      <button id="prTab-injuries" onclick="switchPrTab('injuries')" style="padding:8px 18px;font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--cats-navy);border-bottom:2px solid var(--cats-navy);margin-bottom:-2px;">Injuries</button>
+      <button id="prTab-intakes" onclick="switchPrTab('intakes')" style="padding:8px 18px;font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-2px;">Intakes</button>
+    </div>
+
+    <!-- Content -->
+    <div id="pr-content" style="overflow-y:auto;flex:1;"></div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
@@ -1504,7 +1711,11 @@ async function doLogout() {
   await db.auth.signOut();
 }
 
-function mapRow(u) { return u.player_id !== undefined ? { ...u, playerId: u.player_id } : u; }
+function mapRow(u) {
+  if (u.player_id !== undefined) return { ...u, playerId: u.player_id };
+  if (u.speler_id !== undefined) return { ...u, playerId: u.speler_id };
+  return u;
+}
 
 // ============================================================
 // DATA
@@ -1567,6 +1778,11 @@ let statusUpdates = [
 
 let medicalHistory = [];
 let formLogs = [];
+let injuries = [];
+let editingInjuryId = null;
+let editingIntakeId = null;
+let medicalChecklists = [];
+let medicalIntakes = [];
 
 // ============================================================
 // STAFF CONTACTEN (per speler, alles optioneel)
@@ -1681,7 +1897,7 @@ const pageTitles = {
   dagstatus: 'Dagstatus',
   weekrapport: 'Weekrapport',
   medisch: 'Medisch rapport',
-  arts: 'Arts — Medische invoer',
+  arts: 'Doctor — Medical Input',
   kine: 'Kinesist — Behandelinvoer',
   rapporten: 'PDF Rapporten',
   mail: 'Rapport mailen',
@@ -2647,99 +2863,602 @@ async function saveMedicalContact() {
 // ARTS PAGE
 // ============================================================
 function renderArtsPage() {
-  const sel = document.getElementById('arts-player');
-  if (sel && sel.options.length <= 1) {
+  // Checklist player dropdown + date
+  const clSel = document.getElementById('checklist-player');
+  if (clSel && clSel.options.length <= 1) {
+    players.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; clSel.appendChild(o); });
+  }
+  renderChecklistCategories();
+
+  ['intake-player','injury-player'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (sel && sel.options.length <= 1) {
+      players.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name; sel.appendChild(o); });
+    }
+  });
+  const dateFld = document.getElementById('intake-datum');
+  if (dateFld && !dateFld.value) dateFld.value = today();
+  const startFld = document.getElementById('injury-startdatum');
+  if (startFld && !startFld.value) startFld.value = today();
+  renderArtsHistory();
+  renderArtsIntakesList();
+  renderArtsInjuriesList();
+}
+
+function renderArtsHistory() {
+  const pid = parseInt(document.getElementById('injury-player')?.value)
+           || parseInt(document.getElementById('checklist-player')?.value)
+           || parseInt(document.getElementById('intake-player')?.value);
+  const el = document.getElementById('arts-history-content');
+  if (!el) return;
+  if (!pid) { el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Select a player to view injury history.</span>'; return; }
+  const inj = injuries.filter(i => i.playerId === pid).sort((a,b) => b.startdatum.localeCompare(a.startdatum));
+  if (!inj.length) { el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">No injuries on record.</span>'; return; }
+  const statusLabel = { fit:'Fit', klachten:'Klachten', restricted:'Restricties', out:'Out' };
+  const statusColor = { fit:'var(--fit)', klachten:'var(--fit-complaints)', restricted:'var(--restricted)', out:'var(--injured)' };
+  el.innerHTML = inj.map(i => `
+    <div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:3px;">
+        <span style="font-weight:600;color:var(--cats-navy);">${i.diagnose||'—'}</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <span style="font-size:11px;font-weight:600;color:${statusColor[i.status]||'var(--text-muted)'};">${statusLabel[i.status]||i.status}</span>
+          <button onclick="editInjury(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--cats-navy);font-size:13px;line-height:1;padding:0;" title="Edit">✏️</button>
+          <button onclick="deleteInjury(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;line-height:1;padding:0;" title="Delete">🗑</button>
+        </div>
+      </div>
+      <div style="color:var(--text-muted);font-size:12px;margin-bottom:2px;">
+        ${i.lichaamsdeel||''}${i.zijde ? ` · ${i.zijde}` : ''}${i.ernst ? ` · ${i.ernst}` : ''}
+      </div>
+      <div style="color:var(--text-muted);font-size:11px;">
+        ${formatDate(i.startdatum)}${i.einddatum ? ` → ${formatDate(i.einddatum)}` : ' → <strong style="color:var(--injured);">active</strong>'}
+      </div>
+      ${i.opmerkingen ? `<div style="color:var(--text);font-size:12px;margin-top:3px;">${i.opmerkingen}</div>` : ''}
+    </div>`).join('');
+}
+
+function renderArtsIntakesList() {
+  const el = document.getElementById('arts-intakes-list');
+  if (!el) return;
+  const list = [...medicalIntakes].sort((a,b) => b.datum.localeCompare(a.datum)).slice(0, 15);
+  if (!list.length) { el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">No intakes yet.</span>'; return; }
+  el.innerHTML = list.map(i => {
+    const p = getPlayerById(i.playerId);
+    const checks = Object.entries(i.checklist || {}).filter(([,v])=>v).map(([k])=>k).join(', ');
+    return `<div style="padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+        <span style="font-weight:600;color:var(--cats-navy);">${p ? p.name : '—'}</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="color:var(--text-muted);font-size:11px;">${formatDate(i.datum)}</span>
+          <button onclick="editIntake(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--cats-navy);font-size:13px;line-height:1;padding:0;" title="Edit">✏️</button>
+          <button onclick="deleteIntake(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;line-height:1;padding:0;" title="Verwijderen">🗑</button>
+        </div>
+      </div>
+      ${i.klachten ? `<div style="color:var(--text);margin-bottom:2px;">${i.klachten}</div>` : ''}
+      ${checks ? `<div style="color:var(--text-muted);font-size:11px;">✓ ${checks}</div>` : ''}
+      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Doctor: ${i.arts_naam||'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderArtsInjuriesList() {
+  const el = document.getElementById('arts-injuries-list');
+  if (!el) return;
+  const list = [...injuries].sort((a,b) => b.startdatum.localeCompare(a.startdatum)).slice(0, 15);
+  if (!list.length) { el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">No injuries yet.</span>'; return; }
+  const statusColor = { fit:'var(--fit)', klachten:'var(--fit-complaints)', restricted:'var(--restricted)', out:'var(--injured)' };
+  const statusLabel = { fit:'Fit', klachten:'Klachten', restricted:'Restricties', out:'Out' };
+  el.innerHTML = list.map(i => {
+    const p = getPlayerById(i.playerId);
+    return `<div style="padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+        <span style="font-weight:600;color:var(--cats-navy);">${p ? p.name : '—'}</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px;font-weight:600;color:${statusColor[i.status]||'var(--text-muted)'};">${statusLabel[i.status]||i.status}</span>
+          <button onclick="editInjury(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--cats-navy);font-size:13px;line-height:1;padding:0;" title="Edit">✏️</button>
+          <button onclick="deleteInjury(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;line-height:1;padding:0;" title="Delete">🗑</button>
+        </div>
+      </div>
+      <div style="color:var(--text);margin-bottom:2px;">${i.diagnose||'—'}${i.lichaamsdeel ? ` · ${i.lichaamsdeel}` : ''}${i.zijde ? ` (${i.zijde})` : ''}</div>
+      <div style="color:var(--text-muted);font-size:11px;">${formatDate(i.startdatum)}${i.einddatum ? ` → ${formatDate(i.einddatum)}` : ' → active'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// PATIENT RECORDS MODAL
+// ============================================================
+let prActiveTab = 'injuries';
+
+function openPatientRecords(preselectedPid) {
+  const sel = document.getElementById('pr-player-select');
+  // Populate dropdown if empty
+  if (sel.options.length <= 1) {
     players.forEach(p => {
       const o = document.createElement('option');
       o.value = p.id; o.textContent = p.name;
       sel.appendChild(o);
     });
   }
-  const dateFld = document.getElementById('arts-date');
-  if (dateFld && !dateFld.value) dateFld.value = today();
-  renderArtsHistory();
-  renderArtsLogs();
+  if (preselectedPid) sel.value = preselectedPid;
+  // Pre-select from intake form if available
+  if (!preselectedPid) {
+    const intakePid = document.getElementById('intake-player')?.value;
+    if (intakePid) sel.value = intakePid;
+  }
+  switchPrTab(prActiveTab);
+  renderPatientRecords();
+  openModal('patientRecordsModal');
 }
 
-function renderArtsHistory() {
-  const pid = parseInt(document.getElementById('arts-player')?.value);
-  const el = document.getElementById('arts-history-content');
+function switchPrTab(tab) {
+  prActiveTab = tab;
+  ['injuries','intakes'].forEach(t => {
+    const btn = document.getElementById(`prTab-${t}`);
+    if (!btn) return;
+    const active = t === tab;
+    btn.style.color = active ? 'var(--cats-navy)' : 'var(--text-muted)';
+    btn.style.borderBottomColor = active ? 'var(--cats-navy)' : 'transparent';
+  });
+  renderPatientRecords();
+}
+
+function renderPatientRecords() {
+  const pid = parseInt(document.getElementById('pr-player-select')?.value);
+  const el = document.getElementById('pr-content');
   if (!el) return;
-  if (!pid) { el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Kies een speler om de voorgeschiedenis te zien.</span>'; return; }
-  const hist = medicalHistory.filter(h => h.playerId === pid).sort((a,b) => b.date.localeCompare(a.date));
-  if (!hist.length) { el.innerHTML = '<span style="color:var(--text-muted);font-size:13px;">Geen medische voorgeschiedenis beschikbaar.</span>'; return; }
-  el.innerHTML = hist.map(h => `
-    <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:2px;">
-        <span style="font-weight:600;color:var(--cats-navy);">${h.type||'—'}</span>
-        <span style="color:var(--text-muted);font-size:12px;">${formatDate(h.date)}</span>
-      </div>
-      <div style="color:var(--text);">${h.description||'—'}</div>
-      ${h.by ? `<div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Door: ${h.by}</div>` : ''}
-    </div>`).join('');
+
+  if (!pid) {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">Select a player to view records.</div>';
+    return;
+  }
+
+  const row = (label, val) => val ? `<div style="display:flex;gap:8px;margin-bottom:3px;font-size:12px;"><span style="color:var(--text-muted);min-width:120px;flex-shrink:0;">${label}</span><span style="color:var(--text);">${val}</span></div>` : '';
+
+  if (prActiveTab === 'injuries') {
+    const list = injuries.filter(i => i.playerId === pid).sort((a,b) => b.startdatum.localeCompare(a.startdatum));
+    if (!list.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">No injuries on record.</div>'; return; }
+    const statusLabel = { fit:'Fit', klachten:'Klachten', restricted:'Restricted', out:'Out' };
+    const statusColor = { fit:'var(--fit)', klachten:'var(--fit-complaints)', restricted:'var(--restricted)', out:'var(--injured)' };
+    el.innerHTML = list.map(i => `
+      <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+          <div>
+            <div style="font-weight:600;color:var(--cats-navy);font-size:14px;margin-bottom:2px;">${i.diagnose||'—'}</div>
+            <span style="font-size:11px;font-weight:600;color:${statusColor[i.status]||'var(--text-muted)'};">${statusLabel[i.status]||i.status}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <button onclick="closeModal('patientRecordsModal');editInjury(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--cats-navy);font-size:13px;padding:0;" title="Edit">✏️</button>
+            <button onclick="deleteInjury(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:0;" title="Delete">🗑</button>
+          </div>
+        </div>
+        ${row('Body Part', [i.lichaamsdeel, i.injury_type].filter(Boolean).join(' — '))}
+        ${row('Side', i.zijde)}
+        ${row('Severity', i.ernst)}
+        ${row('Period', formatDate(i.startdatum) + (i.einddatum ? ' → ' + formatDate(i.einddatum) : ' → <strong style="color:var(--injured);">active</strong>'))}
+        ${row('Doctor', i.arts_naam)}
+        ${row('Anamnesis', i.anamnese)}
+        ${row('Clinical Findings', i.clinical_findings)}
+        ${row('Remarks', i.opmerkingen)}
+        ${row('Medication', i.medicatie)}
+        ${i.attachment_url ? (() => {
+          try {
+            const urls = JSON.parse(i.attachment_url);
+            const names = JSON.parse(i.attachment_name || '[]');
+            return `<div style="display:flex;gap:8px;margin-bottom:3px;font-size:12px;"><span style="color:var(--text-muted);min-width:120px;flex-shrink:0;">Attachments</span><div style="display:flex;flex-direction:column;gap:3px;">${urls.map((u,idx)=>`<a href="${u}" target="_blank" style="color:var(--cats-navy);">${names[idx]||'File '+(idx+1)}</a>`).join('')}</div></div>`;
+          } catch { return `<div style="display:flex;gap:8px;margin-bottom:3px;font-size:12px;"><span style="color:var(--text-muted);min-width:120px;flex-shrink:0;">Attachment</span><a href="${i.attachment_url}" target="_blank" style="color:var(--cats-navy);">${i.attachment_name||'Open file'}</a></div>`; }
+        })() : ''}
+      </div>`).join('');
+  } else {
+    const list = medicalIntakes.filter(i => i.playerId === pid).sort((a,b) => b.datum.localeCompare(a.datum));
+    if (!list.length) { el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px 0;">No intakes on record.</div>'; return; }
+    el.innerHTML = list.map(i => `
+      <div style="padding:14px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-weight:600;color:var(--cats-navy);font-size:14px;">${formatDate(i.datum)}</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="closeModal('patientRecordsModal');editIntake(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--cats-navy);font-size:13px;padding:0;" title="Edit">✏️</button>
+            <button onclick="deleteIntake(${i.id})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:0;" title="Delete">🗑</button>
+          </div>
+        </div>
+        ${row('Doctor', i.arts_naam)}
+        ${row('Complaints', i.klachten)}
+        ${row('Clinical Findings', i.huidige_klachten)}
+        ${row('Advice', i.advice)}
+        ${row('Extra Info', i.extra_info)}
+        ${row('Medical Background', i.voorgeschiedenis)}
+      </div>`).join('');
+  }
 }
 
-function renderArtsLogs() {
-  const tbody = document.getElementById('artsLogsTable');
-  if (!tbody) return;
-  const logs = formLogs.filter(f => f.type === 'Arts').sort((a,b) => b.date.localeCompare(a.date));
-  if (!logs.length) { tbody.innerHTML = `<tr><td colspan="7" style="color:var(--text-muted);text-align:center;padding:20px;">Nog geen arts-invoer.</td></tr>`; return; }
-  tbody.innerHTML = logs.map(f => {
-    const p = getPlayerById(f.playerId);
-    return `<tr>
-      <td style="font-size:12px;font-family:'DM Mono',monospace;">${formatDate(f.date)}</td>
-      <td style="font-weight:500;">${p ? p.name : '—'}</td>
-      <td style="font-size:12px;max-width:140px;">${f.note||'—'}</td>
-      <td style="font-size:12px;">${f.diagnose||'—'}</td>
-      <td style="font-size:12px;">${f.ernst||'—'}</td>
-      <td>${f.status ? statusBadge(f.status) : '—'}</td>
-      <td style="font-size:12px;color:var(--text-muted);">${f.by||'—'}</td>
-    </tr>`;
+async function deleteIntake(id) {
+  if (!confirm('Delete this intake?')) return;
+  const { error } = await db.from('medical_intakes').delete().eq('id', id);
+  if (error) { showToast('Fout bij verwijderen: ' + error.message); return; }
+  medicalIntakes = medicalIntakes.filter(i => i.id !== id);
+  renderArtsIntakesList();
+  renderPatientRecords();
+  showToast('Intake deleted');
+}
+
+async function deleteInjury(id) {
+  if (!confirm('Delete this injury?')) return;
+  const { error } = await db.from('injuries').delete().eq('id', id);
+  if (error) { showToast('Fout bij verwijderen: ' + error.message); return; }
+  injuries = injuries.filter(i => i.id !== id);
+  renderArtsInjuriesList();
+  renderArtsHistory();
+  renderPatientRecords();
+  showToast('Injury deleted');
+}
+
+async function submitIntakeForm() {
+  const pid = parseInt(document.getElementById('intake-player').value);
+  if (!pid) { showToast('Select a player'); return; }
+  const datum            = document.getElementById('intake-datum').value || today();
+  const arts_naam        = document.getElementById('intake-arts').value || 'Doctor';
+  const klachten         = document.getElementById('intake-klachten').value.trim();
+  const huidige_klachten = document.getElementById('intake-huidig').value.trim();
+  const advice           = document.getElementById('intake-advice').value.trim();
+  const extra_info       = document.getElementById('intake-extra').value.trim();
+  const voorgeschiedenis = document.getElementById('intake-voorgeschiedenis').value.trim();
+
+  const fields = {
+    datum, arts_naam, klachten, huidige_klachten,
+    advice: advice || null,
+    extra_info: extra_info || null,
+    voorgeschiedenis: voorgeschiedenis || null
+  };
+
+  if (editingIntakeId) {
+    const { error } = await db.from('medical_intakes').update(fields).eq('id', editingIntakeId);
+    if (error) { showToast('Error updating: ' + error.message); return; }
+    const idx = medicalIntakes.findIndex(x => x.id === editingIntakeId);
+    if (idx >= 0) medicalIntakes[idx] = { ...medicalIntakes[idx], ...fields };
+    showToast('Intake updated ✓');
+  } else {
+    const { data, error } = await db.from('medical_intakes').insert({
+      speler_id: pid, ...fields, checklist: {}
+    }).select().single();
+    if (error) { showToast('Error saving: ' + error.message); return; }
+    medicalIntakes.unshift(data ? { ...mapRow({ ...data, player_id: data.speler_id }) }
+      : { playerId: pid, ...fields });
+    showToast('Intake saved ✓');
+  }
+
+  resetIntakeForm();
+  renderArtsIntakesList();
+}
+
+function resetIntakeForm() {
+  ['intake-klachten','intake-huidig','intake-advice','intake-extra','intake-voorgeschiedenis','intake-arts','intake-player']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  editingIntakeId = null;
+  const btn = document.querySelector('button[onclick="submitIntakeForm()"]');
+  if (btn) btn.textContent = 'Save intake';
+}
+
+
+function editIntake(id) {
+  const i = medicalIntakes.find(x => x.id === id);
+  if (!i) return;
+  editingIntakeId = id;
+  document.getElementById('intake-player').value         = i.speler_id || i.playerId || '';
+  document.getElementById('intake-datum').value          = i.datum || '';
+  document.getElementById('intake-arts').value           = i.arts_naam || '';
+  document.getElementById('intake-klachten').value       = i.klachten || '';
+  document.getElementById('intake-huidig').value         = i.huidige_klachten || '';
+  document.getElementById('intake-advice').value         = i.advice || '';
+  document.getElementById('intake-extra').value          = i.extra_info || '';
+  document.getElementById('intake-voorgeschiedenis').value = i.voorgeschiedenis || '';
+  const btn = document.querySelector('button[onclick="submitIntakeForm()"]');
+  if (btn) btn.textContent = 'Update intake';
+  document.getElementById('intake-klachten').scrollIntoView({ behavior:'smooth', block:'center' });
+  showToast('Intake loaded — make your changes and save');
+}
+
+function editInjury(id) {
+  const i = injuries.find(x => x.id === id);
+  if (!i) return;
+  editingInjuryId = id;
+  document.getElementById('injury-player').value       = i.speler_id || i.playerId || '';
+  document.getElementById('injury-arts').value         = i.arts_naam || '';
+  document.getElementById('injury-startdatum').value   = i.startdatum || '';
+  document.getElementById('injury-einddatum').value    = i.einddatum || '';
+  document.getElementById('injury-diagnose').value     = i.diagnose || '';
+  document.getElementById('injury-zijde').value        = i.zijde || '';
+  document.getElementById('injury-status').value       = i.status || 'out';
+  document.getElementById('injury-lichaamsdeel').value = i.lichaamsdeel || '';
+  document.getElementById('injury-type').value         = i.injury_type || '';
+  document.getElementById('injury-ernst').value        = i.ernst || '';
+  document.getElementById('injury-anamnese').value     = i.anamnese || '';
+  document.getElementById('injury-clinical').value     = i.clinical_findings || '';
+  document.getElementById('injury-opmerkingen').value  = i.opmerkingen || '';
+  document.getElementById('injury-medicatie').value    = i.medicatie || '';
+  // Show existing attachment
+  const attachCurrent = document.getElementById('injury-attachment-current');
+  if (attachCurrent) {
+    if (i.attachment_name && i.attachment_url) {
+      try {
+        const urls = JSON.parse(i.attachment_url);
+        const names = JSON.parse(i.attachment_name);
+        const links = urls.map((u,idx) => `<a href="${u}" target="_blank" style="color:var(--cats-navy);">${names[idx]||'File '+(idx+1)}</a>`).join(', ');
+        attachCurrent.style.display = 'block';
+        attachCurrent.innerHTML = `Current: ${links} <span style="color:var(--text-muted);">(upload new files to replace)</span>`;
+      } catch {
+        attachCurrent.style.display = 'block';
+        attachCurrent.innerHTML = `Current: <a href="${i.attachment_url}" target="_blank" style="color:var(--cats-navy);">${i.attachment_name}</a> <span style="color:var(--text-muted);">(upload new files to replace)</span>`;
+      }
+    } else {
+      attachCurrent.style.display = 'none';
+    }
+  }
+  // Update button label
+  const btn = document.querySelector('button[onclick="submitInjuryForm()"]');
+  if (btn) btn.textContent = 'Update injury';
+  // Scroll to form
+  document.getElementById('injury-diagnose').scrollIntoView({ behavior:'smooth', block:'center' });
+  showToast('Injury loaded — make your changes and save');
+}
+
+async function submitInjuryForm() {
+  const pid = parseInt(document.getElementById('injury-player').value);
+  if (!pid) { showToast('Select a player'); return; }
+  const startdatum    = document.getElementById('injury-startdatum').value || today();
+  const einddatum     = document.getElementById('injury-einddatum').value || null;
+  const diagnose      = document.getElementById('injury-diagnose').value.trim();
+  const lichaamsdeel  = document.getElementById('injury-lichaamsdeel').value;
+  const injury_type   = document.getElementById('injury-type').value;
+  const zijde         = document.getElementById('injury-zijde').value || null;
+  const ernst         = document.getElementById('injury-ernst').value;
+  const status        = document.getElementById('injury-status').value;
+  const anamnese        = document.getElementById('injury-anamnese').value.trim();
+  const clinical_findings = document.getElementById('injury-clinical').value.trim();
+  const opmerkingen   = document.getElementById('injury-opmerkingen').value.trim();
+  const medicatie     = document.getElementById('injury-medicatie').value.trim();
+  const by            = document.getElementById('injury-arts').value || 'Doctor';
+
+  if (!diagnose) { showToast('Please fill in a diagnosis'); return; }
+
+  // Handle file uploads (multiple)
+  const fileInput = document.getElementById('injury-attachment');
+  const files = Array.from(fileInput?.files || []);
+  let attachment_url = null, attachment_name = null;
+  if (files.length) {
+    const urls = [], names = [];
+    for (const file of files) {
+      const ext = file.name.split('.').pop();
+      const path = `${pid}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: upErr } = await db.storage.from('injury-files').upload(path, file, { upsert: true });
+      if (upErr) { showToast('Upload failed: ' + upErr.message); return; }
+      const { data: urlData } = db.storage.from('injury-files').getPublicUrl(path);
+      urls.push(urlData?.publicUrl || '');
+      names.push(file.name);
+    }
+    attachment_url  = JSON.stringify(urls);
+    attachment_name = JSON.stringify(names);
+  }
+
+  const fields = {
+    diagnose, lichaamsdeel: lichaamsdeel || null, injury_type: injury_type || null,
+    zijde, ernst: ernst || null, status, startdatum, einddatum,
+    anamnese: anamnese || null, clinical_findings: clinical_findings || null,
+    opmerkingen: opmerkingen || null, medicatie: medicatie || null,
+    arts_naam: by || null,
+    ...(attachment_url  ? { attachment_url }  : {}),
+    ...(attachment_name ? { attachment_name } : {}),
+  };
+
+  const statusMap = { fit:'fit', klachten:'fit-complaints', restricted:'restricted', out:'injured' };
+
+  if (editingInjuryId) {
+    // UPDATE existing injury
+    const { error } = await db.from('injuries').update(fields).eq('id', editingInjuryId);
+    if (error) { showToast('Error updating: ' + error.message); return; }
+    const idx = injuries.findIndex(x => x.id === editingInjuryId);
+    if (idx >= 0) injuries[idx] = { ...injuries[idx], ...fields };
+    // Update player status
+    const { data: sData } = await db.from('status_updates').insert({ player_id: pid, status: statusMap[status]||'injured', note: diagnose, date: today(), by }).select().single();
+    statusUpdates.push(sData ? mapRow(sData) : { id: Date.now(), playerId: pid, status: statusMap[status]||'injured', note: diagnose, date: today(), by });
+    showToast('Injury updated ✓');
+  } else {
+    // INSERT new injury
+    const { data, error } = await db.from('injuries').insert({ speler_id: pid, ...fields }).select().single();
+    if (error) { showToast('Error saving: ' + error.message); return; }
+    injuries.unshift(data ? { ...data, playerId: data.speler_id } : { playerId: pid, ...fields });
+
+    const desc = [diagnose, lichaamsdeel ? `(${lichaamsdeel}${zijde ? ' '+zijde : ''})` : '', ernst ? `— ${ernst}` : ''].filter(Boolean).join(' ');
+    const { data: hData } = await db.from('medical_history').insert({ player_id: pid, date: startdatum, type: 'Diagnose', description: desc, by }).select().single();
+    medicalHistory.push(hData ? mapRow(hData) : { playerId: pid, date: startdatum, type: 'Diagnose', description: desc, by });
+
+    const { data: sData } = await db.from('status_updates').insert({ player_id: pid, status: statusMap[status]||'injured', note: diagnose, date: startdatum, by }).select().single();
+    statusUpdates.push(sData ? mapRow(sData) : { id: Date.now(), playerId: pid, status: statusMap[status]||'injured', note: diagnose, date: startdatum, by });
+  }
+
+  resetInjuryForm();
+  renderArtsInjuriesList();
+  renderArtsHistory();
+  renderSpelers();
+  renderHome();
+}
+
+function resetInjuryForm() {
+  editingInjuryId = null;
+  ['injury-diagnose','injury-anamnese','injury-clinical','injury-opmerkingen','injury-medicatie','injury-arts']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['injury-lichaamsdeel','injury-type','injury-zijde','injury-ernst','injury-player']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('injury-status').value = 'out';
+  document.getElementById('injury-einddatum').value = '';
+  const fi = document.getElementById('injury-attachment');
+  if (fi) fi.value = '';
+  const fl = document.getElementById('injury-attachment-label');
+  if (fl) fl.textContent = 'No file chosen';
+  const ac = document.getElementById('injury-attachment-current');
+  if (ac) { ac.style.display = 'none'; ac.innerHTML = ''; }
+  const btn = document.querySelector('button[onclick="submitInjuryForm()"]');
+  if (btn) btn.textContent = 'Save injury';
+}
+
+// kept for backward-compatibility (PDF reports still reference formLogs with type Arts)
+function renderArtsLogs() {}
+
+// ============================================================
+// PATIENT DOSSIER CHECKLIST
+// ============================================================
+const CHECKLIST_CATEGORIES = [
+  { key: 'steunzolen',      label: 'Insoles', type: 'select', options: ['Yes', 'No'] },
+  { key: 'bracing',         label: 'Bracing',              type: 'select', options: ['Left', 'Right', 'Both', 'None'] },
+  { key: 'tapings',         label: 'Tapings',              type: 'select', options: ['Left', 'Right', 'Both', 'None'], note: true },
+  { key: 'vaccinations',    label: 'Vaccinations' },
+  { key: 'cardiovascular',  label: 'Cardiovascular' },
+  { key: 'pneumological',   label: 'Pneumological' },
+  { key: 'gynecological',   label: 'Gynecological' },
+  { key: 'mental',          label: 'Mental' },
+  { key: 'locomotor',       label: 'Locomotor' },
+  { key: 'vision',          label: 'Vision (visus)' },
+  { key: 'hearing',         label: 'Hearing' },
+  { key: 'allergies',       label: 'Allergies' },
+  { key: 'irritations',     label: 'Irritations' },
+  { key: 'other',           label: 'Other' },
+];
+
+function renderChecklistCategories(existing = {}) {
+  const container = document.getElementById('checklist-categories');
+  if (!container) return;
+  container.innerHTML = CHECKLIST_CATEGORIES.map(cat => {
+    const selectEl = cat.type === 'select'
+      ? `<select id="checklist-val-${cat.key}" style="flex:0 0 140px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--cats-cream);">
+           <option value="">—</option>
+           ${cat.options.map(o => `<option value="${o.toLowerCase()}"${(existing[cat.key]||'').toLowerCase()===o.toLowerCase()?' selected':''}>${o}</option>`).join('')}
+         </select>`
+      : '';
+    const noteEl = cat.note
+      ? `<input type="text" id="checklist-note-${cat.key}" value="${existing[cat.key+'_note']||''}" placeholder="Extra info..." style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;background:var(--cats-cream);">`
+      : '';
+    const inputEl = cat.type === 'select'
+      ? `<div style="display:flex;gap:8px;align-items:center;">${selectEl}${noteEl}</div>`
+      : `<textarea id="checklist-val-${cat.key}" rows="2"
+           style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;resize:vertical;background:var(--cats-cream);"
+           placeholder="Notes for ${cat.label.toLowerCase()}...">${existing[cat.key] || ''}</textarea>`;
+    const existingFiles = (() => {
+      try {
+        const urls = JSON.parse(existing[cat.key+'_url'] || 'null');
+        const names = JSON.parse(existing[cat.key+'_name'] || 'null');
+        if (!urls) return '';
+        return urls.map((u, idx) => `<a href="${u}" target="_blank" style="color:var(--cats-navy);font-size:11px;">${names[idx]||'File '+(idx+1)}</a>`).join(' · ');
+      } catch { return ''; }
+    })();
+
+    return `
+    <div style="border-bottom:1px solid var(--border);">
+      <div onclick="toggleChecklistRow('${cat.key}')"
+           style="display:flex;justify-content:space-between;align-items:center;padding:8px 2px;cursor:pointer;user-select:none;">
+        <span style="font-size:13px;font-weight:500;color:var(--text);">${cat.label}</span>
+        <span id="checklist-icon-${cat.key}"
+              style="font-size:16px;font-weight:300;color:var(--cats-navy);line-height:1;">+</span>
+      </div>
+      <div id="checklist-row-${cat.key}" style="display:none;padding:0 2px 10px;">
+        ${inputEl}
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+          <label for="checklist-file-${cat.key}" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;background:#fff;color:var(--text-muted);border:1px solid var(--border);border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;" onmouseover="this.style.borderColor='var(--cats-navy)';this.style.color='var(--cats-navy)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">📎 Attach</label>
+          <input type="file" id="checklist-file-${cat.key}" multiple accept=".pdf,.jpg,.jpeg,.png,.heic" style="display:none;" onchange="document.getElementById('checklist-filelabel-${cat.key}').textContent=this.files.length?this.files.length+' file'+(this.files.length>1?'s':'')+' selected':''">
+          <span id="checklist-filelabel-${cat.key}" style="font-size:11px;color:var(--text-muted);">${existingFiles}</span>
+        </div>
+      </div>
+    </div>`;
   }).join('');
 }
 
-async function submitArtsForm() {
-  const pid = parseInt(document.getElementById('arts-player').value);
-  if (!pid) { showToast('Kies een speler'); return; }
-  const date    = document.getElementById('arts-date').value || today();
-  const by      = document.getElementById('arts-by').value.trim() || 'Arts';
-  const intake  = document.getElementById('arts-intake').value.trim();
-  const diag    = document.getElementById('arts-diagnose').value.trim();
-  const ernst   = document.getElementById('arts-ernst').value;
-  const part    = document.getElementById('arts-part').value;
-  const extra   = document.getElementById('arts-extra').value.trim();
-  const meds    = document.getElementById('arts-meds').value.trim();
-  const status  = document.getElementById('arts-status').value;
-  const beeldv  = ['arts-img-xray','arts-img-echo','arts-img-mri','arts-img-ct']
-    .filter(id => document.getElementById(id)?.checked)
-    .map(id => ({ 'arts-img-xray':'X-ray','arts-img-echo':'Echografie','arts-img-mri':'MRI','arts-img-ct':'CT-scan' })[id])
-    .join(', ');
-
-  const note = [intake, diag ? `Diagnose: ${diag}` : '', part ? `Lichaamsdeel: ${part}` : '', beeldv ? `Beeldvorming: ${beeldv}` : '', extra, meds ? `Medicatie: ${meds}` : ''].filter(Boolean).join(' | ');
-
-  const { data: logData } = await db.from('form_logs').insert({ player_id: pid, date, type: 'Arts', by, note }).select().single();
-  formLogs.push(logData ? { ...mapRow(logData), diagnose: diag, ernst, status } : { date, type: 'Arts', playerId: pid, by, note, diagnose: diag, ernst, status });
-
-  if (diag) {
-    const desc = [diag, part ? `(${part})` : '', ernst ? `— ${ernst}` : ''].filter(Boolean).join(' ');
-    const { data: hData } = await db.from('medical_history').insert({ player_id: pid, date, type: 'Diagnose', description: desc, by }).select().single();
-    medicalHistory.push(hData ? mapRow(hData) : { playerId: pid, date, type: 'Diagnose', description: desc, by });
-  }
-  if (status) {
-    const { data: sData } = await db.from('status_updates').insert({ player_id: pid, status, note: diag||intake, date, by }).select().single();
-    statusUpdates.push(sData ? mapRow(sData) : { id: Date.now(), playerId: pid, status, note: diag||intake, date, by });
-  }
-
-  showToast('Arts-invoer opgeslagen ✓');
-  resetArtsForm();
-  renderArtsLogs();
-  renderArtsHistory();
+function toggleChecklistRow(key) {
+  const row  = document.getElementById(`checklist-row-${key}`);
+  const icon = document.getElementById(`checklist-icon-${key}`);
+  if (!row) return;
+  const open = row.style.display !== 'none';
+  row.style.display  = open ? 'none' : 'block';
+  icon.textContent   = open ? '+' : '−';
+  icon.style.transform = open ? '' : 'rotate(0deg)';
+  if (!open) document.getElementById(`checklist-val-${key}`)?.focus();
 }
 
-function resetArtsForm() {
-  ['arts-intake','arts-diagnose','arts-extra','arts-meds','arts-by'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-  ['arts-ernst','arts-part','arts-status'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-  ['arts-img-xray','arts-img-echo','arts-img-mri','arts-img-ct'].forEach(id => { const el=document.getElementById(id); if(el) el.checked=false; });
+function loadChecklistForPlayer() {
+  const pid = parseInt(document.getElementById('checklist-player').value);
+  if (!pid) return;
+  const existing = medicalChecklists.find(c => c.playerId === pid || c.speler_id === pid);
+  const data = existing?.checklist_data || {};
+  if (existing?.arts_naam) document.getElementById('checklist-arts').value = existing.arts_naam;
+  renderChecklistCategories(data);
+  // Open rows that have a value
+  CHECKLIST_CATEGORIES.forEach(cat => {
+    const val  = document.getElementById(`checklist-val-${cat.key}`);
+    const row  = document.getElementById(`checklist-row-${cat.key}`);
+    const icon = document.getElementById(`checklist-icon-${cat.key}`);
+    if (val) val.value = data[cat.key] || '';
+    if (data[cat.key] && row && icon) { row.style.display = 'block'; icon.textContent = '−'; }
+  });
+}
+
+async function submitChecklistForm() {
+  const pid       = parseInt(document.getElementById('checklist-player').value);
+  const datum     = today();
+  const arts_naam = document.getElementById('checklist-arts').value || '';
+  if (!pid) { showToast('Select a player'); return; }
+
+  // Preserve existing file data
+  const existingRec = medicalChecklists.find(c => c.playerId === pid || c.speler_id === pid);
+  const checklist_data = { ...(existingRec?.checklist_data || {}) };
+
+  for (const cat of CHECKLIST_CATEGORIES) {
+    const val = document.getElementById(`checklist-val-${cat.key}`)?.value.trim();
+    if (val) checklist_data[cat.key] = val; else delete checklist_data[cat.key];
+    if (cat.note) {
+      const note = document.getElementById(`checklist-note-${cat.key}`)?.value.trim();
+      if (note) checklist_data[cat.key + '_note'] = note; else delete checklist_data[cat.key + '_note'];
+    }
+    // Upload new files for this category
+    const fileInput = document.getElementById(`checklist-file-${cat.key}`);
+    const files = Array.from(fileInput?.files || []);
+    if (files.length) {
+      const urls = [], names = [];
+      for (const file of files) {
+        const ext = file.name.split('.').pop();
+        const path = `dossier/${pid}/${cat.key}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: upErr } = await db.storage.from('injury-files').upload(path, file, { upsert: true });
+        if (upErr) { showToast('Upload failed: ' + upErr.message); return; }
+        const { data: urlData } = db.storage.from('injury-files').getPublicUrl(path);
+        urls.push(urlData?.publicUrl || '');
+        names.push(file.name);
+      }
+      checklist_data[cat.key + '_url']  = JSON.stringify(urls);
+      checklist_data[cat.key + '_name'] = JSON.stringify(names);
+    }
+  }
+
+  if (existingRec) {
+    const { error } = await db.from('medical_checklists').update({ datum, arts_naam, checklist_data }).eq('id', existingRec.id);
+    if (error) { showToast('Error saving: ' + error.message); return; }
+    existingRec.datum = datum; existingRec.arts_naam = arts_naam; existingRec.checklist_data = checklist_data;
+  } else {
+    const { data, error } = await db.from('medical_checklists').insert({ speler_id: pid, datum, arts_naam, checklist_data }).select().single();
+    if (error) { showToast('Error saving: ' + error.message); return; }
+    medicalChecklists.unshift(data ? { ...data, playerId: data.speler_id } : { playerId: pid, datum, arts_naam, checklist_data });
+  }
+  showToast('Patient dossier saved ✓');
+}
+
+function resetChecklistForm() {
+  document.getElementById('checklist-player').value = '';
+  document.getElementById('checklist-arts').value   = '';
+  CHECKLIST_CATEGORIES.forEach(cat => {
+    const val  = document.getElementById(`checklist-val-${cat.key}`);
+    const row  = document.getElementById(`checklist-row-${cat.key}`);
+    const icon = document.getElementById(`checklist-icon-${cat.key}`);
+    if (val)  val.value = '';
+    if (row)  row.style.display = 'none';
+    if (icon) icon.textContent  = '+';
+    if (cat.note) { const n = document.getElementById(`checklist-note-${cat.key}`); if (n) n.value = ''; }
+    const fi = document.getElementById(`checklist-file-${cat.key}`); if (fi) fi.value = '';
+    const fl = document.getElementById(`checklist-filelabel-${cat.key}`); if (fl) fl.textContent = '';
+  });
 }
 
 // ============================================================
@@ -2998,74 +3717,105 @@ async function generatePlayerPDF(playerId, customNote = '') {
   }
 
   // ── MEDICAL CHECK-UP / INTAKE ─────────────────────────────
-  const intakeItems = [];
-  artsLogs.slice(0,5).forEach(l => { if (l.note) intakeItems.push('- ' + l.note); });
-  hist.slice(0,5).forEach(h => {
-    const str = `- ${formatDate(h.date)}: ${h.description}`;
-    if (!intakeItems.some(i => i.includes(h.description))) intakeItems.push(str);
-  });
+  const playerIntakes = medicalIntakes.filter(i => i.playerId === playerId).sort((a,b) => b.datum.localeCompare(a.datum));
+  const latestIntake  = playerIntakes[0] || null;
+  // fallback: build a synthetic intake from artsLogs if no real intake exists
+  const hasIntakeData = latestIntake || artsLogs.length || hist.length;
 
-  if (intakeItems.length) {
+  if (hasIntakeData) {
     sectionBar('MEDICAL CHECK-UP / INTAKE');
-    tc(...TEXT); doc.setFont('helvetica','bold'); doc.setFontSize(9);
-    doc.text('Doc:', M, y); y += 6;
-    doc.setFont('helvetica','normal');
-    intakeItems.forEach(item => {
-      guard(8);
-      const lines = doc.splitTextToSize(item, CW-4);
-      doc.text(lines, M+3, y);
-      y += lines.length * 4.8 + 2;
-    });
-    y += 4;
+
+    function labelField(label, value, x, w, fieldY) {
+      // label strip
+      fc(230,226,220); doc.rect(x, fieldY-4, w, 5.5, 'F');
+      tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(7);
+      doc.text(label.toUpperCase(), x+2, fieldY+0.2);
+      // value
+      const valLines = doc.splitTextToSize(value || '—', w-4);
+      tc(...TEXT); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+      doc.text(valLines, x+2, fieldY+6.5);
+      return valLines.length * 4.5 + 9;
+    }
+
+    if (latestIntake) {
+      // Row 1: Date + Doctor (two columns)
+      guard(18);
+      const hw = (CW - 4) / 2;
+      labelField('Date of examination', formatDate(latestIntake.datum), M, hw, y);
+      labelField('Examining physician', latestIntake.arts_naam || '—', M + hw + 4, hw, y);
+      y += 18;
+
+      // Complaints — included in report
+      if (latestIntake.klachten) {
+        guard(20);
+        y += Math.max(labelField('Complaints', latestIntake.klachten, M, CW, y), 18);
+      }
+
+      // Clinical Findings — included in report
+      if (latestIntake.huidige_klachten) {
+        guard(20);
+        y += Math.max(labelField('Clinical Findings', latestIntake.huidige_klachten, M, CW, y), 18);
+      }
+
+      // Advice — included in report
+      if (latestIntake.advice) {
+        guard(20);
+        y += Math.max(labelField('Advice', latestIntake.advice, M, CW, y), 18);
+      }
+
+
+
+      // Extra info and medical history are NOT included in the report
+    } else {
+      // Fallback: show arts logs / history as labeled entries
+      const fallbackItems = [];
+      artsLogs.slice(0,3).forEach(l => { if (l.note) fallbackItems.push({ date: l.date, by: l.by, text: l.note }); });
+      hist.slice(0,3).forEach(h => { if (!fallbackItems.some(f => f.text?.includes(h.description))) fallbackItems.push({ date: h.date, by: h.by||'—', text: h.description }); });
+      fallbackItems.forEach((item, fi) => {
+        guard(20);
+        if (fi % 2 === 0) { fc(248,246,242); doc.rect(M, y-2, CW, 12, 'F'); }
+        tc(...MUTED); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+        doc.text(formatDate(item.date), M+2, y+3);
+        tc(...TEXT); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+        const lines = doc.splitTextToSize(item.text, CW-30);
+        doc.text(lines, M+28, y+3);
+        tc(...MUTED); doc.setFontSize(7); doc.text(item.by||'', W-M, y+3, { align:'right' });
+        y += Math.max(lines.length*4.5+4, 11);
+      });
+    }
+    y += 6;
   }
 
-  // ── MEDICAL COMMENT ───────────────────────────────────────
-  const commentItems = hist.filter(h=>h.description);
-  if (commentItems.length || kineLogs.length) {
+  // ── MEDICAL COMMENT (KINE ONLY) ───────────────────────────
+  if (kineLogs.length) {
     guard(20);
     sectionBar('MEDICAL COMMENT');
-
-    tc(...TEXT); doc.setFont('helvetica','bolditalic'); doc.setFontSize(9);
-    doc.text('Doc / Physiotherapists:', M, y); y += 7;
-
-    // Column header row
-    const c1=M, c2=M+66, c3=M+128, w1=62, w2=58, w3=54;
-    fc(230,226,220); doc.rect(M, y-4, CW, 8, 'F');
-    dc(200,195,188); doc.setLineWidth(0.3);
-    doc.line(c2-2, y-4, c2-2, y+4);
-    doc.line(c3-2, y-4, c3-2, y+4);
-    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
-    doc.text('Injury / illness / complaint', c1+2, y+0.5);
-    doc.text('Approach',           c2+2, y+0.5);
-    doc.text('Prognosis & Advice', c3+2, y+0.5);
-    dc(200,195,190); doc.setLineWidth(0.4);
-    doc.line(M, y+4, W-M, y+4);
-    y += 9;
-
-    const rows = Math.max(commentItems.length, kineLogs.length, 1);
-    for (let i=0; i<rows; i++) {
-      guard(14);
-      const h   = commentItems[i];
-      const kine= kineLogs[i];
-      const arts= artsLogs[i];
-
-      const t1 = h    ? `- ${formatDate(h.date)}: ${h.description}` : '—';
-      const t2 = kine ? `- ${kine.note||'—'}`                       : '—';
-      const t3 = arts?.note || '—';
-
-      const l1=doc.splitTextToSize(t1,w1), l2=doc.splitTextToSize(t2,w2), l3=doc.splitTextToSize(t3,w3);
-      const rh = Math.max(l1.length,l2.length,l3.length)*4.5+5;
-
-      doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-      tc(...TEXT);  doc.text(l1, c1, y);
-      tc(...MUTED); doc.text(l2, c2, y);
-      tc(...TEXT);  doc.text(l3, c3, y);
-      dc(...LGRAY); doc.setLineWidth(0.2);
-      doc.line(M, y+rh-2, W-M, y+rh-2);
+    kineLogs.forEach((kl, ki) => {
+      const noteText = [kl.diagnose ? `Diagnosis: ${kl.diagnose}` : '', kl.note||''].filter(Boolean).join(' — ');
+      const lines = doc.splitTextToSize(noteText || '—', CW - 32);
+      const rh = Math.max(lines.length * 4.5 + 5, 11);
+      if (y + rh > 278) newPage();
+      if (ki % 2 === 0) { fc(248,246,242); doc.rect(M, y-2, CW, rh, 'F'); }
+      tc(...MUTED); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+      doc.text(formatDate(kl.date), M+2, y+3);
+      tc(...TEXT); doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+      doc.text(lines, M+30, y+3);
+      tc(...MUTED); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+      doc.text(kl.by||'', W-M, y+3, { align:'right' });
+      dc(...LGRAY); doc.setLineWidth(0.2); doc.line(M, y+rh-1, W-M, y+rh-1);
       y += rh;
-    }
-    y += 4;
+    });
+    y += 6;
   }
+
+  // ── PHYSICALLY ────────────────────────────────────────────
+  guard(40);
+  sectionBar('PHYSICALLY');
+  // Reserved for future physical data — currently blank
+  fc(248,246,242); doc.rect(M, y-2, CW, 22, 'F');
+  tc(...MUTED); doc.setFont('helvetica','italic'); doc.setFontSize(8.5);
+  doc.text('No physical data recorded for this period.', M+4, y+9);
+  y += 28;
 
   // ── CONTACT ───────────────────────────────────────────────
   guard(70);
@@ -3163,6 +3913,22 @@ function renderRapportenPage() {
   const to   = document.getElementById('rapp-to');
   if (from && !from.value) { const d=new Date(); d.setDate(d.getDate()-7); from.value=d.toISOString().split('T')[0]; }
   if (to   && !to.value)   to.value = today();
+
+  const dbdContainer = document.getElementById('dbd-player-checkboxes');
+  if (dbdContainer && dbdContainer.children.length === 0) {
+    const sorted = [...players].sort((a,b) => posOrder(a.pos) - posOrder(b.pos));
+    dbdContainer.innerHTML = sorted.map(p => `
+      <label style="display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;padding:3px 0;">
+        <input type="checkbox" class="dbd-player-cb" value="${p.id}" checked style="width:14px;height:14px;">
+        <span>${p.name} <span style="color:var(--text-muted);font-size:11px;">(${p.pos})</span></span>
+      </label>`).join('');
+  }
+  const dbdFrom = document.getElementById('dbd-from');
+  const dbdTo   = document.getElementById('dbd-to');
+  if (dbdFrom && !dbdFrom.value) { const d=new Date(); d.setDate(d.getDate()-7); dbdFrom.value=d.toISOString().split('T')[0]; }
+  if (dbdTo   && !dbdTo.value)   dbdTo.value = today();
+  renderDayByDayPeriodsDropdown();
+
   renderSavedPeriodsDropdown();
   renderSavedPeriodsList();
 }
@@ -3215,6 +3981,7 @@ function savePeriod() {
   else periods.push({ name, from, to });
   localStorage.setItem('bc_periods', JSON.stringify(periods));
   renderSavedPeriodsDropdown();
+  renderDayByDayPeriodsDropdown();
   renderSavedPeriodsList();
   showToast(`Periode "${name}" opgeslagen ✓`);
 }
@@ -3250,6 +4017,7 @@ function deletePeriodByIndex(idx) {
   localStorage.setItem('bc_periods', JSON.stringify(periods));
   document.getElementById('rapp-saved-periods').value = '';
   renderSavedPeriodsDropdown();
+  renderDayByDayPeriodsDropdown();
   renderSavedPeriodsList();
   showToast('Periode verwijderd');
 }
@@ -3259,6 +4027,164 @@ async function generateCustomPlayerPDF() {
   if (!pid) { showToast('Kies een speler'); return; }
   const customNote = document.getElementById('rapp-custom-note').value.trim();
   await generatePlayerPDF(pid, customNote);
+}
+
+function dbdSelectAll(checked) {
+  document.querySelectorAll('.dbd-player-cb').forEach(cb => cb.checked = checked);
+}
+
+function renderDayByDayPeriodsDropdown() {
+  const sel = document.getElementById('dbd-saved-periods');
+  if (!sel) return;
+  const periods = getSavedPeriods();
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Kies een periode —</option>' +
+    periods.map((p, i) => `<option value="${i}" ${current == i ? 'selected' : ''}>${p.name}  (${formatDate(p.from)} — ${formatDate(p.to)})</option>`).join('');
+}
+
+function loadDayByDayPeriod() {
+  const sel = document.getElementById('dbd-saved-periods');
+  const idx = sel.value;
+  if (idx === '') return;
+  const period = getSavedPeriods()[parseInt(idx)];
+  if (!period) return;
+  document.getElementById('dbd-from').value = period.from;
+  document.getElementById('dbd-to').value   = period.to;
+}
+
+async function generateDayByDayPDF() {
+  const fromDate   = document.getElementById('dbd-from').value;
+  const toDate     = document.getElementById('dbd-to').value;
+  const savedIdx   = document.getElementById('dbd-saved-periods').value;
+  const savedName  = savedIdx !== '' ? (getSavedPeriods()[parseInt(savedIdx)]?.name || '') : '';
+  const periodName = savedName || (fromDate && toDate ? `${formatDate(fromDate)} — ${formatDate(toDate)}` : '');
+
+  if (!fromDate || !toDate) { showToast('Kies een periode'); return; }
+  if (fromDate > toDate)    { showToast('Van-datum moet voor tot-datum liggen'); return; }
+  const selectedIds = [...document.querySelectorAll('.dbd-player-cb:checked')].map(cb => parseInt(cb.value));
+  if (!selectedIds.length)  { showToast('Selecteer minstens één speler'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const W = 297, H = 210, M = 10;
+  const NAVY=[11,31,58], GOLD=[200,146,42], WHITE=[255,255,255], TEXT=[26,22,18], MUTED=[107,101,96];
+  const sColors = { 'fit':[45,122,58], 'fit-complaints':[91,138,47], 'restricted':[199,106,0], 'injured':[180,44,44] };
+  const sLetters = { 'fit':'F', 'fit-complaints':'K', 'restricted':'R', 'injured':'G' };
+  const fc = (...c) => doc.setFillColor(...c);
+  const tc = (...c) => doc.setTextColor(...c);
+
+  async function urlToDataUrl(src) {
+    try { const img=new Image(); img.crossOrigin='anonymous'; await new Promise(r=>{img.onload=r;img.onerror=r;img.src=src;}); if(!img.naturalWidth) return null; const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; c.getContext('2d').drawImage(img,0,0); return c.toDataURL('image/png'); } catch { return null; }
+  }
+
+  const logoDataUrl = await urlToDataUrl('belgian-cats-report-logo.jpg');
+  const selectedPlayers = players.filter(p => selectedIds.includes(p.id)).sort((a,b) => posOrder(a.pos) - posOrder(b.pos));
+  const dates = getDatesInRange(fromDate, toDate);
+  const dayNames = ['zo','ma','di','wo','do','vr','za'];
+
+  const headerH = 30;
+  const footerH = 12;
+  const nameColW = 44;
+  const contentW = W - 2*M;
+  const dateAreaW = contentW - nameColW;
+  const colHeaderH = 11;
+  const tableAreaH = H - headerH - footerH - 4;
+  const rowH = Math.max(5.5, Math.min(9, (tableAreaH - colHeaderH) / selectedPlayers.length));
+
+  // Split dates into chunks that fit the page width (min 6mm per col)
+  const maxColsPerPage = Math.floor(dateAreaW / 6);
+  const dateChunks = [];
+  for (let i = 0; i < dates.length; i += maxColsPerPage) dateChunks.push(dates.slice(i, i + maxColsPerPage));
+
+  let firstPage = true;
+  for (const chunk of dateChunks) {
+    if (!firstPage) doc.addPage();
+    firstPage = false;
+    const colW = Math.min(18, dateAreaW / chunk.length);
+
+    // ── HEADER ──
+    fc(...NAVY); doc.rect(0, 0, W, headerH, 'F');
+    fc(...GOLD); doc.rect(0, headerH, W, 1, 'F');
+    const lH = 17, lW = 30;
+    if (logoDataUrl) doc.addImage(logoDataUrl, 'JPEG', M, (headerH - lH) / 2, lW, lH);
+    tc(...GOLD); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+    doc.text('BELGIAN CATS — MEDICAL STAFF', M + lW + 8, headerH/2 - 3.5);
+    tc(...WHITE); doc.setFont('helvetica','bold'); doc.setFontSize(13);
+    doc.text('Day by Day Status', M + lW + 8, headerH/2 + 5);
+    tc(...GOLD); doc.setFont('helvetica','bold'); doc.setFontSize(8);
+    doc.text(periodName, W - M, 10, { align:'right' });
+    tc(180,160,100); doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
+    doc.text(`${selectedPlayers.length} spelers  ·  ${dates.length} dagen`, W - M, 17, { align:'right' });
+    // Legend
+    const legendItems = [['G',[180,44,44],'Geblesseerd'],['R',[199,106,0],'Restricties'],['K',[91,138,47],'Fit m/kl.'],['F',[45,122,58],'Fit']];
+    let lx = W - M;
+    for (const [letter, color, label] of legendItems) {
+      lx -= 30;
+      fc(...color); doc.rect(lx, 20, 6, 5, 'F');
+      tc(...WHITE); doc.setFont('helvetica','bold'); doc.setFontSize(6); doc.text(letter, lx+3, 24, {align:'center'});
+      tc(200,200,200); doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.text(label, lx+8, 24);
+    }
+
+    let y = headerH + 2;
+
+    // ── COLUMN HEADERS ──
+    fc(230,226,220); doc.rect(M, y, contentW, colHeaderH, 'F');
+    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(7.5);
+    doc.text('Speler', M+2, y + colHeaderH/2 + 2.5);
+    chunk.forEach((date, i) => {
+      const cx = M + nameColW + i * colW;
+      const d = new Date(date + 'T00:00:00');
+      const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+      if (isWeekend) { fc(215,210,200); doc.rect(cx, y, colW, colHeaderH, 'F'); }
+      tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(6);
+      doc.text(dayNames[d.getDay()], cx + colW/2, y + 4.5, {align:'center'});
+      doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
+      doc.text(String(d.getDate()), cx + colW/2, y + 8.5, {align:'center'});
+      doc.setDrawColor(210,205,198); doc.setLineWidth(0.2);
+      doc.line(cx, y, cx, y + colHeaderH);
+    });
+    y += colHeaderH;
+
+    // ── PLAYER ROWS ──
+    selectedPlayers.forEach((p, pi) => {
+      const rowBg = pi % 2 === 0 ? [250,248,244] : [255,255,255];
+      fc(...rowBg); doc.rect(M, y, contentW, rowH, 'F');
+      tc(...TEXT); doc.setFont('helvetica','normal'); doc.setFontSize(Math.min(7.5, rowH - 1));
+      doc.text(p.name, M+2, y + rowH/2 + 2.2);
+      chunk.forEach((date, i) => {
+        const cx = M + nameColW + i * colW;
+        const d = new Date(date + 'T00:00:00');
+        const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+        if (isWeekend) { fc(242,239,233); doc.rect(cx, y, colW, rowH, 'F'); }
+        const su = getLastStatusOnOrBefore(p.id, date);
+        if (su && sColors[su.status]) {
+          const pad = 0.8;
+          fc(...sColors[su.status]); doc.rect(cx + pad, y + pad, colW - pad*2, rowH - pad*2, 'F');
+          tc(...WHITE); doc.setFont('helvetica','bold'); doc.setFontSize(Math.min(7, rowH - 2));
+          doc.text(sLetters[su.status] || '?', cx + colW/2, y + rowH/2 + 2.2, {align:'center'});
+        }
+        doc.setDrawColor(220,216,210); doc.setLineWidth(0.15);
+        doc.line(cx, y, cx, y + rowH);
+      });
+      doc.setDrawColor(225,221,215); doc.setLineWidth(0.15);
+      doc.line(M, y + rowH, M + contentW, y + rowH);
+      y += rowH;
+    });
+
+    // Table outer border
+    doc.setDrawColor(180,175,168); doc.setLineWidth(0.4);
+    doc.rect(M, headerH + 2, contentW, colHeaderH + selectedPlayers.length * rowH, 'S');
+
+    // ── FOOTER ──
+    fc(248,245,239); doc.rect(0, H - footerH, W, footerH, 'F');
+    fc(...GOLD); doc.rect(0, H - footerH, W, 0.6, 'F');
+    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.text('BELGIAN CATS', M, H - 4.5);
+    tc(...MUTED); doc.setFont('helvetica','normal'); doc.setFontSize(6.5); doc.text(`Medical Staff  ·  ${periodName}  ·  Confidential`, M + 26, H - 4.5);
+    tc(...NAVY); doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.text(`Gegenereerd: ${formatDate(today())}`, W - M, H - 4.5, {align:'right'});
+  }
+
+  doc.save(`DayByDay_${fromDate}_${toDate}.pdf`);
+  showToast('Day by Day rapport gegenereerd ✓');
 }
 
 function getDatesInRange(from, to) {
@@ -3532,17 +4458,23 @@ async function init() {
 
   // Laad data uit Supabase
   try {
-    const [{ data: pData }, { data: sData }, { data: hData }, { data: fData }, { data: mcData }] = await Promise.all([
+    const [{ data: pData }, { data: sData }, { data: hData }, { data: fData }, { data: mcData }, { data: injData }, { data: intakeData }, { data: clData }] = await Promise.all([
       db.from('players').select('*').order('number'),
       db.from('status_updates').select('*'),
       db.from('medical_history').select('*'),
       db.from('form_logs').select('*'),
       db.from('medical_contacts').select('*').order('id'),
+      db.from('injuries').select('*').order('startdatum', { ascending: false }),
+      db.from('medical_intakes').select('*').order('datum', { ascending: false }),
+      db.from('medical_checklists').select('*').order('datum', { ascending: false }),
     ]);
-    if (pData?.length)  players        = pData;
-    if (sData?.length)  statusUpdates  = sData.map(mapRow);
-    if (hData?.length)  medicalHistory = hData.map(mapRow);
-    if (fData?.length)  formLogs       = fData.map(mapRow);
+    if (pData?.length)      players        = pData;
+    if (sData?.length)      statusUpdates  = sData.map(mapRow);
+    if (hData?.length)      medicalHistory = hData.map(mapRow);
+    if (fData?.length)      formLogs       = fData.map(mapRow);
+    if (injData?.length)    injuries          = injData.map(mapRow);
+    if (intakeData?.length) medicalIntakes    = intakeData.map(mapRow);
+    if (clData?.length)     medicalChecklists = clData.map(mapRow);
     if (mcData?.length) medicalContactsData = mcData.map(r => ({
       _id: r.id,
       club: r.club || '', players: r.players || '',
@@ -3569,3 +4501,4 @@ init();
 </script>
 </body>
 </html>
+
